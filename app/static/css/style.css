@@ -1,0 +1,329 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+#map {
+    height: 100vh; /* Use viewport height instead of a fixed pixel value */
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+}
+
+#loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 10px 20px;
+    border-radius: 5px;
+    z-index: 1000;
+    font-weight: bold;
+    display: none;
+}
+
+#controls {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 2;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+#layer-control {
+    margin-bottom: 10px;
+}
+
+button {
+    padding: 5px 10px;
+    margin: 2px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+#search-input {
+    padding: 5px;
+    width: 200px;
+    margin-right: 5px;
+}
+
+.form-container {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background-color: white;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 2;
+    display: none;
+    max-width: 250px;
+}
+
+.form-container h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.form-container input, 
+.form-container select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+}
+
+.form-container button {
+    width: 100%;
+    margin-bottom: 5px;
+}
+
+#delete-button {
+    background-color: #f44336;
+}
+
+#delete-button:hover {
+    background-color: #d32f2f;
+}
+
+.legend {
+    position: absolute;
+    bottom: 20px;
+    right: 10px;
+    background-color: white;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 2;
+}
+
+.legend h4 {
+    margin-top: 0;
+    margin-bottom: 5px;
+}
+
+.legend-item {
+    margin-bottom: 5px;
+}
+
+#location-status {
+    position: absolute;
+    bottom: 20px;
+    left: 10px;
+    background-color: white;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 2;
+}
+
+.success {
+    background-color: #dff0d8 !important;
+    color: #3c763d;
+}
+
+.error {
+    background-color: #f2dede !important;
+    color: #a94442;
+}
+
+.info {
+    background-color: #d9edf7 !important;
+    color: #31708f;
+}
+
+.language-selector {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 2;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 5px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.language-options {
+    display: flex;
+}
+
+.lang-btn {
+    background: none;
+    border: 1px solid #ccc;
+    padding: 5px 10px;
+    margin: 0 2px;
+    cursor: pointer;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    color: #333;
+}
+
+.lang-btn img {
+    width: 16px;
+    margin-right: 5px;
+}
+
+.lang-btn.active {
+    background-color: #e7e7e7;
+    font-weight: bold;
+}
+.report-popup {
+    padding: 5px;
+}
+.report-popup h3 {
+    margin: 0 0 5px 0;
+    color: #333;
+}
+.report-popup p {
+    margin: 3px 0;
+    color: #666;
+}
+
+.weather-panel {
+    position: absolute;
+    bottom: 20px;
+    left: 10px;
+    background: white;
+    padding: 8px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 1000; /* Ensure it's above the map */
+    width: auto;
+    max-width: 250px;
+    font-size: 12px;
+}
+
+.weather-panel h4 {
+    margin: 0 0 3px 0;
+    font-size: 14px;
+    color: #3a7e4f;
+}
+
+.weather-details p {
+    margin: 2px 0;
+    line-height: 1.2;
+}
+
+.crop-advisory {
+    position: absolute;
+    top: 80px;
+    right: 10px;
+    background: white;
+    padding: 8px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 1000; /* Ensure it's above the map */
+    width: auto;
+    max-width: 250px;
+    font-size: 12px;
+}
+
+.crop-advisory h4 {
+    margin: 0 0 3px 0;
+    font-size: 14px;
+    color: #3a7e4f;
+}
+
+.crop-timing {
+    margin: 2px 0;
+    line-height: 1.2;
+}
+
+.optimal-now {
+    color: #d35400;
+    font-weight: bold;
+    margin-left: 5px;
+}
+
+@media (max-width: 768px) {
+    .weather-panel {
+        bottom: 80px;
+    }
+    .crop-advisory {
+        display: none;
+    }
+}
+
+/* Adjust the container that holds your form and other UI elements */
+.container {
+    position: relative;
+    z-index: 2;
+    pointer-events: none; /* Let clicks pass through to the map */
+}
+
+/* But allow clicks on actual controls */
+.container > * {
+    pointer-events: auto;
+}
+#report-form {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 1000;
+    max-width: 300px;
+    font-size: 12px;
+}
+
+/* For smaller screens, consider collapsing the form */
+@media (max-width: 768px) {
+    #report-form {
+        top: auto;
+        bottom: 10px;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    
+    #report-form.collapsed {
+        max-height: 30px;
+        overflow: hidden;
+    }
+    
+    #report-form::before {
+        content: "▼";
+        position: absolute;
+        top: 5px;
+        right: 10px;
+        cursor: pointer;
+    }
+}
+.layer-control a {
+    display: inline-block;
+    padding: 5px 8px;
+    background: white;
+    color: #555;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.layer-control a.active {
+    background: #4a8bbd;
+    color: white;
+}

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
+    <!-- rest of your head content -->
+    <title>AgroMap Uzbekistan</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="language-selector">
+    <div class="language-options">
+        <button onclick="changeLanguage('en')" class="lang-btn {% if g.locale == 'en' %}active{% endif %}">
+            <img src="{{ url_for('static', filename='images/flags/en.png') }}" alt="English"> EN
+        </button>
+        <button onclick="changeLanguage('uz')" class="lang-btn {% if g.locale == 'uz' %}active{% endif %}">
+            <img src="{{ url_for('static', filename='images/flags/uz.png') }}" alt="O'zbek"> UZ
+        </button>
+        <button onclick="changeLanguage('ru')" class="lang-btn {% if g.locale == 'ru' %}active{% endif %}">
+            <img src="{{ url_for('static', filename='images/flags/ru.png') }}" alt="Русский"> RU
+        </button>
+    </div>
+</div>
+    <div id="loading">Loading...</div>
+    <div id="map"></div>
+<!-- All other elements should be positioned absolute or fixed -->
+    
+    <div id="controls">
+        <div id="layer-control">
+            <button onclick="switchLayer('osm')">{{ _('Street') }}</button>
+            <button onclick="switchLayer('satellite')">{{ _('Satellite') }}</button>
+            <button onclick="switchLayer('terrain')">{{ _('Terrain') }}</button>
+        </div>
+        
+        <div id="search-control">
+            <input type="text" id="search-input" placeholder="{{ _('Search location...') }}">
+            <button onclick="searchLocation()">{{ _('Search') }}</button>
+        </div>
+    </div>
+
+    <div id="report-form" class="form-container">
+        <h3>{{ _('Add/Edit Crop Report') }}</h3>
+        <input type="hidden" id="report-id">
+        <select id="crop-type" required>
+            <option value="">{{ _('Select crop type') }}</option>
+            <option value="wheat">{{ _('Wheat') }}</option>
+            <option value="cotton">{{ _('Cotton') }}</option>
+            <option value="potato">{{ _('Potato') }}</option>
+        </select>
+        
+        <input type="number" id="field-size" placeholder="{{ _('Field size (hectares)') }}" 
+           min="0.1" max="10000" step="0.1" required>
+        
+        <input type="text" id="planting-date" placeholder="{{ _('Planting date') }}">
+        
+        <input type="text" id="latitude" readonly>
+        <input type="text" id="longitude" readonly>
+        
+        <button onclick="submitReport()">{{ _('Submit') }}</button>
+        <button onclick="deleteReport()" id="delete-button" style="display: none;">{{ _('Delete') }}</button>
+    </div>
+
+    <div id="legend" class="legend">
+        <h4>Crop Types</h4>
+        <div class="legend-item">
+            <img src="{{ url_for('static', filename='images/markers/wheat.png') }}" width="20"> Wheat
+        </div>
+        <div class="legend-item">
+            <img src="{{ url_for('static', filename='images/markers/cotton.png') }}" width="20"> Cotton
+        </div>
+        <div class="legend-item">
+            <img src="{{ url_for('static', filename='images/markers/potato.png') }}" width="20"> Potato
+        </div>
+    </div>
+
+    <div id="location-status"></div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>
+// Add at the beginning of your HTML body
+console.log("Document loading");
+
+// Add right before the end of your HTML body
+window.addEventListener('load', function() {
+    console.log("Window loaded");
+    console.log("Map element exists:", !!document.getElementById('map'));
+    
+    if (document.getElementById('map')) {
+        console.log("Map dimensions:", document.getElementById('map').getBoundingClientRect());
+    }
+    
+    console.log("Leaflet loaded:", typeof L !== 'undefined');
+});
+</script>
+</body>
+</html>
