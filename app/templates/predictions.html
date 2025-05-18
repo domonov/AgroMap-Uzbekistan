@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroMap - Predictions Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/map.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+        .filter-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .stats-card {
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .stats-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #28a745;
+        }
+        .stats-label {
+            font-size: 14px;
+            color: #6c757d;
+        }
+        .nav-tabs .nav-link.active {
+            font-weight: bold;
+            border-bottom: 3px solid #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid mt-4">
+        <h1 class="mb-4">Prediction Analytics Dashboard</h1>
+        
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs mb-4" id="predictionTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="yield-tab" data-bs-toggle="tab" data-bs-target="#yield-predictions" type="button" role="tab" aria-controls="yield-predictions" aria-selected="true">Yield Predictions</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="disease-tab" data-bs-toggle="tab" data-bs-target="#disease-risk" type="button" role="tab" aria-controls="disease-risk" aria-selected="false">Disease Risk</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="weather-tab" data-bs-toggle="tab" data-bs-target="#weather-impact" type="button" role="tab" aria-controls="weather-impact" aria-selected="false">Weather Impact</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="trends-tab" data-bs-toggle="tab" data-bs-target="#prediction-trends" type="button" role="tab" aria-controls="prediction-trends" aria-selected="false">Prediction Trends</button>
+            </li>
+        </ul>
+        
+        <!-- Tab Content -->
+        <div class="tab-content" id="predictionTabsContent">
+            <!-- Yield Predictions Tab -->
+            <div class="tab-pane fade show active" id="yield-predictions" role="tabpanel" aria-labelledby="yield-tab">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="filter-section">
+                            <h4>Filters</h4>
+                            <form id="yield-filter-form">
+                                <div class="mb-3">
+                                    <label for="yield-crop-type" class="form-label">Crop Type</label>
+                                    <select class="form-select" id="yield-crop-type">
+                                        <option value="">All Crops</option>
+                                        <option value="wheat">Wheat</option>
+                                        <option value="cotton">Cotton</option>
+                                        <option value="rice">Rice</option>
+                                        <option value="corn">Corn</option>
+                                        <option value="vegetables">Vegetables</option>
+                                        <option value="fruits">Fruits</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="yield-region" class="form-label">Region</label>
+                                    <select class="form-select" id="yield-region">
+                                        <option value="">All Regions</option>
+                                        <option value="Tashkent">Tashkent</option>
+                                        <option value="Samarkand">Samarkand</option>
+                                        <option value="Fergana">Fergana</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="yield-start-date" class="form-label">Start Date</label>
+                                    <input type="date" class="form-control" id="yield-start-date">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="yield-end-date" class="form-label">End Date</label>
+                                    <input type="date" class="form-control" id="yield-end-date">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Apply Filters</button>
+                            </form>
+                        </div>
+                        
+                        <div id="yield-statistics" class="mt-4">
+                            <h4>Statistics</h4>
+                            <div class="stats-card">
+                                <div class="stats-label">Average Yield</div>
+                                <div class="stats-value" id="avg-yield">-</div>
+                            </div>
+                            <div class="stats-card">
+                                <div class="stats-label">Sample Size</div>
+                                <div class="stats-value" id="yield-sample-size">-</div>
+                            </div>
+                            <div class="stats-card">
+                                <div class="stats-label">Yield Range</div>
+                                <div class="stats-value" id="yield-range">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-9">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="chart-container">
+                                    <canvas id="yield-bar-chart"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="chart-container">
+                                    <canvas id="yield-pie-chart"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="chart-container">
+                                    <canvas id="yield-line-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Disease Risk Tab -->
+            <div class="tab-pane fade" id="disease-risk" role="tabpanel" aria-labelledby="disease-tab">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="filter-section">
+                            <h4>Filters</h4>
+                            <form id="disease-filter-form">
+                                <div class="mb-3">
+                                    <label for="disease-crop-type" class="form-label">Crop Type</label>
+                                    <select class="form-select" id="disease-crop-type">
+                                        <option value="">All Crops</option>
+                                        <option value="wheat">Wheat</option>
+                                        <option value="cotton">Cotton</option>
+                                        <option value="rice">Rice</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="disease-name" class="form-label">Disease</label>
+                                    <select class="form-select" id="disease-name">
+                                        <option value="">All Diseases</option>
+                                        <option value="rust">Rust</option>
+                                        <option value="powdery_mildew">Powdery Mildew</option>
+                                        <option value="boll_rot">Boll Rot</option>
+                                        <option value="leaf_spot">Leaf Spot</option>
+                                        <option value="blast">Blast</option>
+                                        <option value="blight">Blight</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="disease-region" class="form-label">Region</label>
+                                    <select class="form-select" id="disease-region">
+                                        <option value="">All Regions</option>
+                                        <option value="Tashkent">Tashkent</option>
+                                        <option value="Samarkand">Samarkand</option>
+                                        <option value="Fergana">Fergana</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Apply Filters</button>
+                            </form>
+                        </div>
+                        
+                        <div id="disease-statistics" class="mt-4">
+                            <h4>Statistics</h4>
+                            <div class="stats-card">
+                                <div class="stats-label">Average Risk</div>
+                                <div class="stats-value" id="avg-risk">-</div>
+                            </div>
+                            <div class="stats-card">
+                                <div class="stats-label">Sample Size</div>
+                                <div class="stats-value" id="disease-sample-size">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-9">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="chart-container">
+                                    <canvas id="disease-radar-chart"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="chart-container">
+                                    <canvas id="disease-bar-chart"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="chart-container">
+                                    <div id="disease-heatmap"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Weather Impact Tab -->
+            <div class="tab-pane fade" id="weather-impact" role="tabpanel" aria-labelledby="weather-tab">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="filter-section">
+                            <h4>Filters</h4>
+                            <form id="weather-filter-form">
+                                <div class="mb-3">
+                                    <label for="weather-crop-type" class="form-label">Crop Type</label>
+                                    <select class="form-select" id="weather-crop-type" required>
+                                        <option value="">Select Crop</option>
+                                        <option value="wheat">Wheat</option>
+                                        <option value="cotton">Cotton</option>
+                                        <option value="rice">Rice</option>
+                                        <option value="corn">Corn</option>
+                                        <option value="vegetables">Vegetables</option>
+                                        <option value="fruits">Fruits</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="weather-factor" class="form-label">Weather Factor</label>
+                                    <select class="form-select" id="weather-factor">
+                                        <option value="temperature">Temperature</option>
+                                        <option value="humidity">Humidity</option>
+                                        <option value="rainfall">Rainfall</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Analyze Impact</button>
+                            </form>
+                        </div>
+                        
+                        <div id="weather-analysis" class="mt-4">
+                            <h4>Analysis</h4>
+                            <div class="stats-card">
+                                <div class="stats-label">Correlation</div>
+                                <div class="stats-value" id="weather-correlation">-</div>
+                            </div>
+                            <div class="stats-card">
+                                <div class="stats-label">Interpretation</div>
+                                <div id="weather-interpretation" style="font-size: 14px;">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-9">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="chart-container">
+                                    <canvas id="weather-scatter-chart"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="chart-container">
+                                    <canvas id="weather-line-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Prediction Trends Tab -->
+            <div class="tab-pane fade" id="prediction-trends" role="tabpanel" aria-labelledby="trends-tab">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="filter-section">
+                            <h4>Filters</h4>
+                            <form id="trends-filter-form">
+                                <div class="mb-3">
+                                    <label for="trends-crop-type" class="form-label">Crop Type</label>
+                                    <select class="form-select" id="trends-crop-type">
+                                        <option value="">All Crops</option>
+                                        <option value="wheat">Wheat</option>
+                                        <option value="cotton">Cotton</option>
+                                        <option value="rice">Rice</option>
+                                        <option value="corn">Corn</option>
+                                        <option value="vegetables">Vegetables</option>
+                                        <option value="fruits">Fruits</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="trends-prediction-type" class="form-label">Prediction Type</label>
+                                    <select class="form-select" id="trends-prediction-type">
+                                        <option value="yield">Yield</option>
+                                        <option value="disease">Disease Risk</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="trends-interval" class="form-label">Time Interval</label>
+                                    <select class="form-select" id="trends-interval">
+                                        <option value="day">Daily</option>
+                                        <option value="week">Weekly</option>
+                                        <option value="month" selected>Monthly</option>
+                                        <option value="year">Yearly</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Show Trends</button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-9">
+                        <div class="chart-container" style="height: 500px;">
+                            <canvas id="trends-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Initialize charts
+        let yieldBarChart, yieldPieChart, yieldLineChart;
+        let diseaseRadarChart, diseaseBarChart;
+        let weatherScatterChart, weatherLineChart;
+        let trendsChart;
+        
+        // Initialize the dashboard when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize empty charts
+            initializeCharts();
+            
+            // Set up event listeners for form submissions
+            document.getElementById('yield-filter-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                loadYieldPredictions();
+            });
+            
+            document.getElementById('disease-filter-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                loadDiseaseRisk();
+            });
+            
+            document.getElementById('weather-filter-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                loadWeatherImpact();
+            });
+            
+            document.getElementById('trends-filter-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                loadPredictionTrends();
+            });
+            
+            // Load initial data
+            loadYieldPredictions();
+        });
+        
+        function initializeCharts() {
+            // Yield Bar Chart
+            const yieldBarCtx = document.getElementById('yield-bar-chart').getContext('2d');
+            yieldBarChart = new Chart(yieldBarCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Average Yield (tons/hectare)',
+                        data: [],
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Average Yield by Crop Type'
+                        }
+                    }
+                }
+            });
+            
+            // Yield Pie Chart
+            const yieldPieCtx = document.getElementById('yield-pie-chart').getContext('2d');
+            yieldPieChart = new Chart(yieldPieCtx, {
+                type: 'pie',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.6)',
+                            'rgba(54, 162, 235, 0.6)',
+                            'rgba(255, 206, 86, 0.6)',
+                            'rgba(75, 192, 192, 0.6)',
+                            'rgba(153, 102, 255, 0.6)',
+                            'rgba(255, 159, 64, 0.6)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Yield Distribution by Crop Type'
+                        }
+                    }
+                }
+            });
+            
+            // Disease Radar Chart
+            const diseaseRadarCtx = document.getElementById('disease-radar-chart').getContext('2d');
+            diseaseRadarChart = new Chart(diseaseRadarCtx, {
+                type: 'radar',
+                data: {
+                    labels: [],
+                    datasets: []
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Disease Risk by Crop Type'
+                        }
+                    },
+                    scales: {
+                        r: {
+                            min: 0,
+                            max: 1
+                        }
+                    }
+                }
+            });
+            
+            // Weather Scatter Chart
+            const weatherScatterCtx = document.getElementById('weather-scatter-chart').getContext('2d');
+            weatherScatterChart = new Chart(weatherScatterCtx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Yield vs Weather',
+                        data: [],
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Yield vs Weather Factor'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Weather Factor'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Yield (tons/hectare)'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Trends Chart
+            const trendsCtx = document.getElementById('trends-chart').getContext('2d');
+            trendsChart = new Chart(trendsCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Prediction Value',
+                        data: [],
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 2,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Prediction Trends Over Time'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        function loadYieldPredictions() {
+            const cropType = document.getElementById('yield-crop-type').value;
+            const region = document.getElementById('yield-region').value;
+            const startDate = document.getElementById('yield-start-date').value;
+            const endDate = document.getElementById('yield-end-date').value;
+            
+            // Build query parameters
+            let params = new URLSearchParams();
+            if (cropType) params.append('crop_type', cropType);
+            if (region) params.append('region', region);
+            if (startDate) params.append('start_date', startDate);
+            if (endDate) params.append('end_date', endDate);
+            
+            // Fetch data from API
+            fetch(`/api/visualization/yield-predictions?${params.toString()}`)
+                .then(response => response.json())
+                .then(data => {
+                    updateYieldCharts(data);
+                    updateYieldStatistics(data);
+                })
+                .catch(error => console.error('Error loading yield predictions:', error));
+        }
+        
+        function updateYieldCharts(data) {
+            // Update bar chart
+            const barLabels = [];
+            const barValues = [];
+            
+            data.chart_data.bar_chart.forEach(item => {
+                barLabels.push(item.label);
+                barValues.push(item.value);
+            });
+            
+            yieldBarChart.data.labels = barLabels;
+            yieldBarChart.data.datasets[0].data = barValues;
+            yieldBarChart.update();
+            
+            // Update pie chart
+            yieldPieChart.data.labels = barLabels;
+            yieldPieChart.data.datasets[0].data = barValues;
+            yieldPieChart.update();
+        }
+        
+        function updateYieldStatistics(data) {
+            const stats = data.statistics || {};
+            
+            document.getElementById('avg-yield').textContent = 
+                stats.mean ? stats.mean.toFixed(2) + ' tons/ha' : '-';
+            
+            document.getElementById('yield-sample-size').textContent = 
+                data.sample_size || '-';
+            
+            document.getElementById('yield-range').textContent = 
+                (stats.min && stats.max) ? `${stats.min.toFixed(2)} - ${stats.max.toFixed(2)} tons/ha` : '-';
+        }
+        
+        function loadDiseaseRisk() {
+            const cropType = document.getElementById('disease-crop-type').value;
+            const disease = document.getElementById('disease-name').value;
+            const region = document.getElementById('disease-region').value;
+            
+            // Build query parameters
+            let params = new URLSearchParams();
+            if (cropType) params.append('crop_type', cropType);
+            if (disease) params.append('disease', disease);
+            if (region) params.append('region', region);
+            
+            // Fetch data from API
+            fetch(`/api/visualization/disease-risk?${params.toString()}`)
+                .then(response => response.json())
+                .then(data => {
+                    updateDiseaseCharts(data);
+                    updateDiseaseStatistics(data);
+                })
+                .catch(error => console.error('Error loading disease risk:', error));
+        }
+        
+        function updateDiseaseCharts(data) {
+            // Update radar chart
+            const radarData = data.chart_data.radar_chart;
+            
+            if (radarData && radarData.labels && radarData.datasets) {
+                diseaseRadarChart.data.labels = radarData.labels;
+                diseaseRadarChart.data.datasets = radarData.datasets;
+                diseaseRadarChart.update();
+            }
+            
+            // Update bar chart
+            const barLabels = [];
+            const barValues = [];
+            
+            data.chart_data.bar_chart.forEach(item => {
+                barLabels.push(item.label);
+                barValues.push(item.value);
+            });
+            
+            if (!diseaseBarChart) {
+                const diseaseBarCtx = document.getElementById('disease-bar-chart').getContext('2d');
+                diseaseBarChart = new Chart(diseaseBarCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: barLabels,
+                        datasets: [{
+                            label: 'Disease Risk',
+                            data: barValues,
+                            backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Disease Risk Levels'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 1
+                            }
+                        }
+                    }
+                });
+            } else {
+                diseaseBarChart.data.labels = barLabels;
+                diseaseBarChart.data.datasets[0].data = barValues;
+                diseaseBarChart.update();
+            }
+        }
+        
+        function updateDiseaseStatistics(data) {
+            const stats = data.statistics || {};
+            
+            document.getElementById('avg-risk').textContent = 
+                stats.mean ? (stats.mean * 100).toFixed(1) + '%' : '-';
+            
+            document.getElementById('disease-sample-size').textContent = 
+                data.sample_size || '-';
+        }
+        
+        function loadWeatherImpact() {
+            const cropType = document.getElementById('weather-crop-type').value;
+            const weatherFactor = document.getElementById('weather-factor').value;
+            
+            if (!cropType) {
+                alert('Please select a crop type');
+                return;
+            }
+            
+            // Build query parameters
+            let params = new URLSearchParams();
+            params.append('crop_type', cropType);
+            params.append('weather_factor', weatherFactor);
+            
+            // Fetch data from API
+            fetch(`/api/visualization/weather-impact?${params.toString()}`)
+                .then(response => response.json())
+                .then(data => {
+                    updateWeatherCharts(data, weatherFactor);
+                    updateWeatherAnalysis(data);
+                })
+                .catch(error => console.error('Error loading weather impact:', error));
+        }
+        
+        function updateWeatherCharts(data, weatherFactor) {
+            // Update scatter plot
+            const scatterData = [];
+            
+            data.chart_data.scatter_plot.forEach(point => {
+                scatterData.push({
+                    x: point.

@@ -1,0 +1,60 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Tashkent",
+        "region_id": "UZ-TO",
+        "color": "#4CAF50"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[69.1273, 41.2995], [69.3601, 41.3803], [69.5123, 41.3556], [69.4834, 41.2145], [69.2834, 41.2556], [69.1985, 41.1978], [69.0234, 41.2391], [69.1273, 41.2995]]]
+      }
+    },{
+      "type": "Feature",
+      "properties": {
+        "name": "Andijan",
+        "region_id": "UZ-AN"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[72.1523, 40.7891], [72.3486, 40.9123], [72.6234, 40.8756], [72.4512, 40.6934], [72.1523, 40.7891]]]
+      }
+    },    {
+      "type": "Feature",
+      "properties": {
+        "name": "Bukhara",
+        "region_id": "UZ-BU",
+        "color": "#2196F3"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[64.4456, 39.7689], [64.8234, 39.9123], [65.1234, 39.8456], [65.2345, 39.7123], [65.0123, 39.5678], [64.6789, 39.6234], [64.4456, 39.7689]]]
+      }
+    },    {
+      "type": "Feature",
+      "properties": {
+        "name": "Samarkand",
+        "region_id": "UZ-SA",
+        "color": "#FFC107"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[66.8945, 39.6543], [67.1234, 39.8901], [67.3456, 39.7654], [67.4567, 39.6789], [67.2345, 39.5123], [67.0123, 39.5432], [66.8945, 39.6543]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Fergana",
+        "region_id": "UZ-FA"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[71.7854, 40.3789], [71.9876, 40.5432], [72.1234, 40.4567], [71.8765, 40.2345], [71.7854, 40.3789]]]
+      }
+    }
+  ]
+}

@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Dashboard - AgroMap</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            background: #f6f8fa; 
+        }
+        .navbar {
+            background: #263238;
+            color: #fff;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .navbar h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        .navbar-links {
+            display: flex;
+            gap: 1rem;
+        }
+        .navbar-links a {
+            color: #b0bec5;
+            text-decoration: none;
+            padding: 0.5rem;
+        }
+        .navbar-links a:hover, .navbar-links a.active {
+            color: #fff;
+            border-bottom: 2px solid #4caf50;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.5rem;
+        }
+        .card-header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            color: #333;
+        }
+        .card-content {
+            color: #555;
+        }
+        #map {
+            height: 400px;
+            width: 100%;
+            border-radius: 8px;
+        }
+        .weather-current {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .weather-icon {
+            width: 80px;
+            height: 80px;
+            margin-right: 1rem;
+        }
+        .weather-temp {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-right: 1rem;
+        }
+        .weather-details {
+            flex: 1;
+        }
+        .weather-location {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        .weather-description {
+            text-transform: capitalize;
+            color: #666;
+        }
+        .weather-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .weather-stat {
+            text-align: center;
+            padding: 0.5rem;
+            background: #f5f5f5;
+            border-radius: 4px;
+        }
+        .weather-stat-value {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        .weather-stat-label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .forecast-list {
+            display: flex;
+            overflow-x: auto;
+            gap: 1rem;
+            padding-bottom: 0.5rem;
+        }
+        .forecast-item {
+            min-width: 120px;
+            text-align: center;
+            padding: 1rem;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+        .forecast-date {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        .forecast-icon {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 0.5rem;
+        }
+        .forecast-temp {
+            font-weight: bold;
+        }
+        .forecast-description {
+            font-size: 0.9rem;
+            color: #666;
+            text-transform: capitalize;
+        }
+        .advice-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        .advice-item {
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            background: #f5f5f5;
+            border-radius: 4px;
+            border-left: 4px solid #4caf50;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+        .form-group select, .form-group input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        .btn {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .btn:hover {
+            background: #45a049;
+        }
+        .flash-messages {
+            margin-bottom: 1rem;
+        }
+        .flash-message {
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+        }
+        .flash-message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .flash-message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .flash-message.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1>AgroMap</h1>
+        <div class="navbar-links">
+            <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('main.home') }}">Map</a>
+            <a href="{{ url_for('main.fields') }}">Fields</a>
+            <a href="{{ url_for('main.crop_calendar') }}">Crop Calendar</a>
+            <a href="{{ url_for('main.weather_dashboard') }}" class="active">Weather</a>
+            <a href="{{ url_for('main.profile') }}">Profile</a>
+            <a href="{{ url_for('main.logout') }}">Logout</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        {% if get_flashed_messages() %}
+        <div class="flash-messages">
+            {% for category, message in get_flashed_messages(with_categories=true) %}
+                <div class="flash-message {{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <div class="card">
+            <div class="card-header">
+                <h2>Weather Map</h2>
+            </div>
+            <div class="card-content">
+                <p>Click on the map to get weather information for that location.</p>
+                <div id="map"></div>
+            </div>
+        </div>
+        
+        <div class="dashboard-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Current Weather</h2>
+                </div>
+                <div class="card-content" id="current-weather">
+                    <div class="loading">Click on the map to load weather data...</div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2>Weather-Based Advice</h2>
+                </div>
+                <div class="card-content">
+                    <form id="advice-form">
+                        <div class="form-group">
+                            <label for="crop-type">Crop Type</label>
+                            <select id="crop-type" name="crop_type" required>
+                                <option value="">Select a crop</option>
+                                <option value="wheat">Wheat</option>
+                                <option value="cotton">Cotton</option>
+                                <option value="rice">Rice</option>
+                                <option value="corn">Corn</option>
+                                <option value="vegetables">Vegetables</option>
+                                <option value="fruits">Fruits</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn" disabled id="get-advice-btn">Get Advice</button>
+                    </form>
+                    <div id="advice-content">
+                        <div class="loading">Select a location and crop type to get advice...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card" style="grid-column: 1 / -1;">
+                <div class="card-header">
+                    <h2>5-Day Forecast</h2>
+                </div>
+                <div class="card-content" id="forecast">
+                    <div class="loading">Click on the map to load forecast data...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // Initialize map
+        var map = L.map('map').setView([41.3111, 69.2797], 6);
+        
+        // Add tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        
+        // Add weather layers
+        var precipitationLayer = L.tileLayer('https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid={{ config.OPENWEATHERMAP_API_KEY }}', {
+            attribution: 'Weather data &copy; OpenWeatherMap',
+            opacity: 0.5
+        });
+        
+        var tempLayer = L.tileLayer('https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid={{ config.OPENWEATHERMAP_API_KEY }}', {
+            attribution: 'Weather data &copy; OpenWeatherMap',
+            opacity: 0.5
+        });
+        
+        var cloudsLayer = L.tileLayer('https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid={{ config.OPENWEATHERMAP_API_KEY }}', {
+            attribution: 'Weather data &copy; OpenWeatherMap',
+            opacity: 0.5
+        });
+        
+        // Add layer control
+        var baseLayers = {
+            "OpenStreetMap": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            })
+        };
+        
+        var overlays = {
+            "Precipitation": precipitationLayer,
+            "Temperature": tempLayer,
+            "Clouds": cloudsLayer
+        };
+        
+        L.control.layers(baseLayers, overlays).addTo(map);
+        
+        // Variables to store selected location
+        var selectedLat, selectedLon;
+        var marker;
+        
+        // Handle map click
+        map.on('click', function(e) {
+            selectedLat = e.latlng.lat;
+            selectedLon = e.latlng.lng;
+            
+            // Update marker
+            if (marker) {
+                map.removeLayer(marker);
+            }
+            marker = L.marker([selectedLat, selectedLon]).addTo(map);
+            
+            // Enable get advice button
+            document.getElementById('get-advice-btn').disabled = false;
+            
+            // Get weather data
+            getWeather(selectedLat, selectedLon);
+            getForecast(selectedLat, selectedLon);
+        });
+        
+        // Get current weather
+        function getWeather(lat, lon) {
+            document.getElementById('current-weather').innerHTML = '<div class="loading">Loading weather data...</div>';
+            
+            fetch(`/api/weather?lat=${lat}&lon=${lon}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        document.getElementById('current-weather').innerHTML = `<div class="error">${data.error}</div>`;
+                        return;
+                    }
+                    
+                    const html = `
+                        <div class="weather-current">
+                            <img src="https://openweathermap.org/img/wn/${data.icon}@2x.png" class="weather-icon" alt="${data.weather}">
+                            <div class="weather-temp">${Math.round(data.temp)}°C</div>
+                            <div class="weather-details">
+                                <div class="weather-location">${data.location}, ${data.country || ''}</div>
+                                <div class="weather-description">${data.description}</div>
+                                <div>Feels like: ${Math.round(data.feels_like)}°C</div>
+                            </div>
+                        </div>
+                        <div class="weather-stats">
+                            <div class="weather-stat">
+                                <div class="weather-stat-value">${data.humidity}%</div>
+                                <div class="weather-stat-label">Humidity</div>
+                            </div>
+                            <div class="weather-stat">
+                                <div class="weather-stat-value">${data.wind_speed} m/s</div>
+                                <div class="weather-stat-label">Wind</div>
+                            </div>
+                            <div class="weather-stat">
+                                <div class="weather-stat-value">${data.pressure} hPa</div>
+                                <div class="weather-stat-label">Pressure</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.getElementById('current-weather').innerHTML = html;
+                })
+                .catch(error => {
+                    document.getElementById('current-weather').innerHTML = `<div class="error">Error loading weather data: ${error.message}</div>`;
+                });
+        }
+        
+        // Get forecast
+        function getForecast(lat, lon) {
+            document.getElementById('forecast').innerHTML = '<div class="loading">Loading forecast data...</div>';
+            
+            fetch(`/api/forecast?lat=${lat}&lon=${lon}&days=5`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        document.getElementById('forecast').innerHTML = `<div class="error">${data.error}</div>`;
+                        return;
+                    }
+                    
+                    let html = '<div class="forecast-list">';
+                    
+                    data.forEach(day => {
+                        const date = new Date(day.date);
+                        const formattedDate = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                        
+                        html += `
+                            <div class="forecast-item">
+                                <div class="forecast-date">${formattedDate}</div>
+                                <img src="https://openweathermap.org/img/wn/${day.icon}.png" class="forecast-icon" alt="${day.weather}">
+                                <div class="forecast-temp">${Math.round(day.temp)}°C</div>
+                                <div class="forecast-description">${day.description}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                    document.getElementById('forecast').innerHTML = html;
+                })
+                .catch(error => {
+                    document.getElementById('forecast').innerHTML = `<div class="error">Error loading forecast data: ${error.message}</div>`;
+                });
+        }
+        
+        // Get weather-based advice
+        document.getElementById('advice-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!selectedLat || !selectedLon) {
+                alert('Please select a location on the map first.');
+                return;
+            }
+            
+            const cropType = document.getElementById('crop-type').value;
+            
+            if (!cropType) {
+                alert('Please select a crop type.');
+                return;
+            }
+            
+            document.getElementById('advice-content').innerHTML = '<div class="loading">Loading advice...</div>';
+            
+            fetch(`/api/weather/advice?lat=${selectedLat}&lon=${selectedLon}&crop_type=${cropType}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        document.getElementById('advice-content').innerHTML = `<div class="error">${data.error}</div>`;
+                        return;
+                    }
+                    
+                    let html = `
+                        <h3>Advice for ${data.crop_type}</h3>
+                        <p>Based on current weather conditions:</p>
+                        <ul class="advice-list">
+                    `;
+                    
+                    data.advice.forEach(advice => {
+                        html += `<li class="advice-item">${advice}</li>`;
+                    });
+                    
+                    html += '</ul>';
+                    document.getElementById('advice-content').innerHTML = html;
+                })
+                .catch(error => {
+                    document.getElementById('advice-content').innerHTML = `<div class="error">Error loading advice: ${error.message}</div>`;
+                });
+        });
+    </script>
+</body>
+</html>

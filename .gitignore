@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+
+# Environments
+.env
+.venv/
+venv/
+env/
+
+# VSCode/IDE
+.vscode/
+.idea/
+
+# Build
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Test
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Misc
+.DS_Store
+*.log

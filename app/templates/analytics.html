@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Analytics Dashboard - AgroMap</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; background: #f6f8fa; }
+        .dashboard-container { display: flex; min-height: 100vh; }
+        .sidebar { width: 220px; background: #263238; color: #fff; padding: 24px 0; display: flex; flex-direction: column; }
+        .sidebar h2 { margin: 0 0 24px 24px; font-size: 1.3em; }
+        .sidebar nav a { color: #b0bec5; text-decoration: none; padding: 12px 24px; display: block; border-left: 4px solid transparent; transition: 0.2s; }
+        .sidebar nav a.active, .sidebar nav a:hover { color: #fff; background: #37474f; border-left: 4px solid #4caf50; }
+        .main-content { flex: 1; padding: 32px; }
+        .dashboard-header { font-size: 2em; margin-bottom: 16px; color: #263238; }
+        .widget { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #0001; padding: 24px; margin-bottom: 24px; }
+        .widget h3 { margin-top: 0; color: #4caf50; }
+        .filters-panel { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; }
+        .filter-group { flex: 1; min-width: 200px; }
+        .filter-group label { display: block; margin-bottom: 8px; font-weight: bold; }
+        .filter-group select, .filter-group input { width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd; }
+        .btn { background: #4caf50; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
+        .btn:hover { background: #45a049; }
+        .btn-secondary { background: #607d8b; }
+        .btn-secondary:hover { background: #546e7a; }
+        .chart-container { height: 400px; margin-bottom: 24px; }
+        .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 24px; margin-bottom: 24px; }
+        .chart-card { background: white; border-radius: 8px; box-shadow: 0 2px 8px #0001; padding: 16px; }
+        .chart-card h3 { margin-top: 0; color: #4caf50; }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        .data-table th { background: #f0f0f0; }
+        .pagination { display: flex; justify-content: center; margin-top: 16px; }
+        .pagination button { margin: 0 4px; padding: 8px 12px; border: none; background: #f0f0f0; cursor: pointer; border-radius: 4px; }
+        .pagination button.active { background: #4caf50; color: white; }
+        .export-options { display: flex; gap: 8px; margin-top: 16px; }
+        .loading { display: flex; justify-content: center; align-items: center; height: 200px; }
+        .loading:after { content: ""; width: 40px; height: 40px; border: 6px solid #f3f3f3; border-top: 6px solid #4caf50; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <h2>AgroMap</h2>
+            <nav>
+                <a href="/dashboard">Dashboard</a>
+                <a href="/">Map</a>
+                <a href="/analytics" class="active">Analytics</a>
+                <a href="/weather">Weather</a>
+                <a href="#">Settings</a>
+            </nav>
+        </aside>
+        <main class="main-content">
+            <div class="dashboard-header">Analytics Dashboard</div>
+
+            <!-- Interactive Filters -->
+            <div class="widget">
+                <h3>Data Filters</h3>
+                <div class="filters-panel">
+                    <div class="filter-group">
+                        <label for="crop-type">Crop Type</label>
+                        <select id="crop-type">
+                            <option value="">All Crops</option>
+                            <option value="wheat">Wheat</option>
+                            <option value="cotton">Cotton</option>
+                            <option value="rice">Rice</option>
+                            <option value="corn">Corn</option>
+                            <option value="vegetables">Vegetables</option>
+                            <option value="fruits">Fruits</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="date-range">Date Range</label>
+                        <select id="date-range">
+                            <option value="7d">Last 7 Days</option>
+                            <option value="30d">Last 30 Days</option>
+                            <option value="90d">Last 90 Days</option>
+                            <option value="1y">Last Year</option>
+                            <option value="all">All Time</option>
+                            <option value="custom">Custom Range</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" id="custom-date-container" style="display: none;">
+                        <label for="start-date">Start Date</label>
+                        <input type="date" id="start-date">
+                    </div>
+                    <div class="filter-group" id="custom-date-end-container" style="display: none;">
+                        <label for="end-date">End Date</label>
+                        <input type="date" id="end-date">
+                    </div>
+                    <div class="filter-group">
+                        <label for="region">Region</label>
+                        <select id="region">
+                            <option value="">All Regions</option>
+                            <option value="Tashkent">Tashkent</option>
+                            <option value="Samarkand">Samarkand</option>
+                            <option value="Bukhara">Bukhara</option>
+                            <option value="Andijan">Andijan</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="visualization-type">Visualization</label>
+                        <select id="visualization-type">
+                            <option value="bar">Bar Chart</option>
+                            <option value="line">Line Chart</option>
+                            <option value="pie">Pie Chart</option>
+                            <option value="radar">Radar Chart</option>
+                            <option value="polarArea">Polar Area</option>
+                            <option value="doughnut">Doughnut Chart</option>
+                        </select>
+                    </div>
+                </div>
+                <button id="apply-filters" class="btn">Apply Filters</button>
+                <button id="reset-filters" class="btn btn-secondary">Reset</button>
+            </div>
+
+            <!-- Main Chart -->
+            <div class="widget">
+                <h3>Crop Distribution Analysis</h3>
+                <div class="chart-container">
+                    <canvas id="mainChart"></canvas>
+                </div>
+                <div class="export-options">
+                    <button class="btn" onclick="exportChart('mainChart', 'png')">Export as PNG</button>
+                    <button class="btn" onclick="exportChart('mainChart', 'jpg')">Export as JPG</button>
+                    <button class="btn" onclick="exportChart('mainChart', 'pdf')">Export as PDF</button>
+                    <button class="btn" onclick="exportData('csv')">Export Data as CSV</button>
+                    <button class="btn" onclick="exportData('json')">Export Data as JSON</button>
+                </div>
+            </div>
+
+            <!-- Chart Grid for Custom Charts -->
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <h3>Crop Area by Region</h3>
+                    <canvas id="regionChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Monthly Crop Reports</h3>
+                    <canvas id="timeSeriesChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Crop Type Distribution</h3>
+                    <canvas id="distributionChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Weather Impact Analysis</h3>
+                    <canvas id="weatherImpactChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Real-time Updates Section -->
+            <div class="widget">
+                <h3>Real-time Crop Reports <span id="last-updated"></span></h3>
+                <div id="real-time-container">
+                    <div class="loading"></div>
+                </div>
+            </div>
+
+            <!-- Data Table with Export -->
+            <div class="widget">
+                <h3>Detailed Data</h3>
+                <table class="data-table" id="dataTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Crop Type</th>
+                            <th>Region</th>
+                            <th>Area (ha)</th>
+                            <th>Date</th>
+                            <th>Weather</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data will be loaded dynamically -->
+                    </tbody>
+                </table>
+                <div class="pagination" id="pagination">
+                    <!-- Pagination controls will be added dynamically -->
+                </div>
+                <div class="export-options">
+                    <button class="btn" onclick="exportTableData('csv')">Export Table as CSV</button>
+                    <button class="btn" onclick="exportTableData('excel')">Export Table as Excel</button>
+                    <button class="btn" onclick="exportTableData('pdf')">Export Table as PDF</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Helper function to determine region based on coordinates
+        function getRegionForCoordinates(lat, lon) {
+            // Simple region determination based on coordinates
+            // In a real app, this would use proper point-in-polygon testing
+            if (41.2 <= lat && lat <= 41.4 && 69.1 <= lon && lon <= 69.4) {
+                return "Tashkent";
+            } else if (39.6 <= lat && lat <= 39.7 && 66.9 <= lon && lon <= 67.0) {
+                return "Samarkand";
+            } else if (39.7 <= lat && lat <= 39.8 && 64.4 <= lon && lon <= 64.5) {
+                return "Bukhara";
+            } else if (40.7 <= lat && lat <= 40.8 && 72.3 <= lon && lon <= 72.4) {
+                return "Andijan";
+            }
+            return "Unknown";
+        }
+        // Show/hide custom date range inputs
+        document.getElementById('date-range').addEventListener('change', function() {
+            const customDateContainer = document.getElementById('custom-date-container');
+            const customDateEndContainer = document.getElementById('custom-date-end-container');
+            if (this.value === 'custom') {
+                customDateContainer.style.display = 'block';
+                customDateEndContainer.style.display = 'block';
+            } else {
+                customDateContainer.style.display = 'none';
+                customDateEndContainer.style.display = 'none';
+            }
+        });
+
+        // Apply filters button
+        document.getElementById('apply-filters').addEventListener('click', function() {
+            updateCharts();
+            loadTableData();
+        });
+
+        // Reset filters button
+        document.getElementById('reset-filters').addEventListener('click', function() {
+            document.getElementById('crop-type').value = '';
+            document.getElementById('date-range').value = '30d';
+            document.getElementById('region').value = '';
+            document.getElementById('visualization-type').value = 'bar';
+            document.getElementById('custom-date-container').style.display = 'none';
+            document.getElementById('custom-date-end-container').style.display = 'none';
+            updateCharts();
+            loadTableData();
+        });
+
+        // Function to get filter values
+        function getFilters() {
+            const cropType = document.getElementById('crop-type').value;
+            const dateRange = document.getElementById('date-range').value;
+            const region = document.getElementById('region').value;
+            const visualizationType = document.getElementById('visualization-type').value;
+
+            let startDate = null;
+            let endDate = null;
+
+            if (dateRange === 'custom') {
+                startDate = document.getElementById('start-date').value;
+                endDate = document.getElementById('end-date').value;
+            } else if (dateRange === '7d') {
+                const date = new Date();
+                date.setDate(date.getDate() - 7);
+                startDate = date.toISOString().split('T')[0];
+            } else if (dateRange === '30d') {
+                const date = new Date();
+                date.setDate(date.getDate() - 30);
+                startDate = date.toISOString().split('T')[0];
+            } else if (dateRange === '90d') {
+                const date = new Date();
+                date.setDate(date.getDate() - 90);
+                startDate = date.toISOString().split('T')[0];
+            } else if (dateRange === '1y') {
+                const date = new Date();
+                date.setFullYear(date.getFullYear() - 1);
+                startDate = date.toISOString().split('T')[0];
+            }
+
+            return {
+                cropType,
+                startDate,
+                endDate,
+                region,
+                visualizationType
+            };
+        }
+
+        // Main chart
+        let mainChart = null;
+
+        // Update all charts based on filters
+        function updateCharts() {
+            const filters = getFilters();
+
+            // Build query string
+            let queryParams = new URLSearchParams();
+            if (filters.cropType) queryParams.append('crop_type', filters.cropType);
+            if (filters.startDate) queryParams.append('start_date', filters.startDate);
+            if (filters.endDate) queryParams.append('end_date', filters.endDate);
+            if (filters.region) queryParams.append('region', filters.region);
+
+            // Update main chart
+            fetch(`/api/reports/filter?${queryParams.toString()}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Process data for visualization
+                    const cropCounts = {};
+                    data.forEach(report => {
+                        cropCounts[report.crop_type] = (cropCounts[report.crop_type] || 0) + 1;
+                    });
+
+                    const labels = Object.keys(cropCounts);
+                    const values = Object.values(cropCounts);
+
+                    // Create or update main chart
+                    const ctx = document.getElementById('mainChart').getContext('2d');
+
+                    if (mainChart) {
+                        mainChart.destroy();
+                    }
+
+                    mainChart = new Chart(ctx, {
+                        type: filters.visualizationType,
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Crop Reports',
+                                data: values,
+                                backgroundColor: [
+                                    'rgba(75, 192, 192, 0.6)',
+                                    'rgba(255, 99, 132, 0.6)',
+                                    'rgba(255, 206, 86, 0.6)',
+                                    'rgba(54, 162, 235, 0.6)',
+                                    'rgba(153, 102, 255, 0.6)',
+                                    'rgba(255, 159, 64, 0.6)'
+                                ],
+                                borderColor: [
+                                    'rgba(75, 192, 192, 1)',
+                                    'rgba(255, 99, 132, 1)',
+                                    'rgba(255, 206, 86, 1)',
+                                    'rgba(54, 162, 235, 1)',
+                                    'rgba(153, 102, 255, 1)',
+                                    'rgba(255, 159, 64, 1)'
+                                ],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+
+                    // Update other charts
+                    updateRegionChart(data);
+                    updateTimeSeriesChart();
+                    updateDistributionChart(data);
+                    updateWeatherImpactChart();
+                });
+        }
+
+        // Update region chart
+        function updateRegionChart(data) {
+            const regionCounts = {};
+            data.forEach(report => {
+                // In a real app, you would get the region from the report
+                // For now, we'll simulate it
+                const region = getRegionForCoordinates(report.latitude, report.longitude);
+                regionCounts[region] = (regionCounts[region] || 0) + report.area_size;
+            });
+
+            const labels = Object.keys(regionCounts);
+            const values = Object.values(regionCounts);
+
+            const ctx = document.getElementById('regionChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Total Area (ha)',
+                        data: values,
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update time series chart
+        function updateTimeSeriesChart() {
+            const filters = getFilters();
+
+            // Build query string
+            let queryParams = new URLSearchParams();
+            if (filters.cropType) queryParams.append('crop_type', filters.cropType);
+            if (filters.startDate) queryParams.append('start_date', filters.startDate);
+            if (filters.endDate) queryParams.append('end_date', filters.endDate);
+            queryParams.append('interval', 'month'); // Default to monthly
+
+            fetch(`/api/timeseries?${queryParams.toString()}`)
+                .then(response => response.json())
+                .then(data => {
+                    const ctx = document.getElementById('timeSeriesChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.map(d => new Date(d.date).toLocaleDateString()),
+                            datasets: [
+                                {
+                                    label: 'Total Area (ha)',
+                                    data: data.map(d => d.total_area),
+                                    borderColor: 'rgb(75, 192, 192)',
+                                    tension: 0.1,
+                                    fill: false
+                                },
+                                {
+                                    label: 'Report Count',
+                                    data: data.map(d => d.report_count),
+                                    borderColor: 'rgb(255, 99, 132)',
+                                    tension: 0.1,
+                                    fill: false
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                });
+        }
+
+        // Update distribution chart
+        function updateDistributionChart(data) {
+            const cropAreas = {};
+            data.forEach(report => {
+                cropAreas[report.crop_type] = (cropAreas[report.crop_type] || 0) + report.area_size;
+            });
+
+            const labels = Object.keys(cropAreas);
+            const values = Object.values(cropAreas);
+
+            const ctx = document.getElementById('distributionChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.6)',
+                            'rgba(255, 99, 132, 0.6)',
+                            'rgba(255, 206, 86, 0.6)',
+                            'rgba(54, 162, 235, 0.6)',
+                            'rgba(153, 102, 255, 0.6)',
+                            'rgba(255, 159, 64, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        // Update weather impact chart
+        function updateWeatherImpactChart() {
+            // This would be a more complex chart that correlates weather data with crop yields
+            // For now, we'll create a simulated chart
+            const ctx = document.getElementById('weatherImpactChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Temperature', 'Rainfall', 'Humidity', 'Wind', 'Sunshine', 'Soil Moisture'],
+                    datasets: [
+                        {
+                            label: 'Wheat',
+                            data: [65, 75, 70, 60, 80, 75],
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            pointBackgroundColor: 'rgba(75, 192, 192, 1)'
+                        },
+                        {
+                            label: 'Cotton',
+                            data: [80, 60, 65, 70, 85, 60],
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            pointBackgroundColor: 'rgba(255, 99, 132, 1)'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: true
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        // Load table data
+        let tableData = [];
+        let currentPage = 1;
+        const pageSize = 10;
+
+        function loadTableData() {
+            const filters = getFilters();
+
+            // Build query string
+            let queryParams = new URLSearchParams();
+            if (filters.cropType) queryParams.append('crop_type', filters.cropType);
+            if (filters.startDate) queryParams.append('start_date', filters.startDate);
+            if (filters.endDate) queryParams.append('end_date', filters.endDate);
+            if (filters.region) queryParams.append('region', filters.region);
+
+            fetch(`/api/reports/filter?${queryParams.toString()}`)
+                .then(response => response.json())
+                .then(data => {
+                    tableData = data;
+                    renderTable();
+                });
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('dataTable').querySelector('tbody');
+            tbody.innerHTML = '';
+
+            const start = (currentPage - 1) * pageSize;
+            const end = Math.min(start + pageSize, tableData.length);
+
+            for (let i = start; i < end; i++) {
+                const report = tableData[i];
+                const tr = document.createElement('tr');
+
+                // In a real app, you would get the region from the report
+                // For now, we'll simulate it
+                const region = getRegionForCoordinates(report.latitude, report.longitude);
+
+                tr.innerHTML = `
+                    <td>${report.id}</td>
+                    <td>${report.crop_type}</td>
+                    <td>${region}</td>
+                    <td>${report.area_size}</td>
+                    <td>${report.created_at ? new Date(report.created_at).toLocaleDateString() : 'N/A'}</td>
+                    <td>Sunny</td>
+                `;
+                tbody.appendChild(tr);
+            }
+
+            renderPagination();
+        }
+
+        function renderPagination() {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+
+            const pageCount = Math.ceil(tableData.length / pageSize);
+
+            for (let i = 1; i <= pageCount; i++) {
+                const button = document.createElement('button');
+                button.textContent = i;
+                button.classList.toggle('active', i === currentPage);
+                button.addEventListener('click', () => {
+                    currentPage = i;
+                    renderTable();
+                });
+                pagination.appendChild(button);
+            }
+        }
+
+        // Simulate real-time updates
+        function setupRealTimeUpdates() {
+            const container = document.getElementById('real-time-container');
+            const lastUpdated = document.getElementById('last-updated');
+
+            function updateRealTimeData() {
+                // In a real app, this would fetch new data from the server
+                // For now, we'll simulate it
+                const now = new Date();
+                lastUpdated.textContent = `(Last updated: ${now.toLocaleTimeString()})`;
+
+                // Simulate new data
+                const newReports = [
+                    { id: Math.floor(Math.random() * 1000), crop_type: 'Wheat', area: 25.5, region: 'Tashkent', time: now.toLocaleTimeString() },
+                    { id: Math.floor(Math.random() * 1000), crop_type: 'Cotton', area: 18.2, region: 'Samarkand', time: now.toLocaleTimeString() }
+                ];
+
+                container.innerHTML = `
+                    <div style="max-height: 300px; overflow-y: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Crop Type</th>
+                                    <th>Area (ha)</th>
+                                    <th>Region</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${newReports.map(report => `
+                                    <tr>
+                                        <td>${report.id}</td>
+                                        <td>${report.crop_type}</td>
+                                        <td>${report.area}</td>
+                                        <td>${report.region}</td>
+                                        <td>${report.time}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            // Update every 30 seconds
+            updateRealTimeData();
+            setInterval(updateRealTimeData, 30000);
+        }
+
+        // Export functions
+        function exportChart(chartId, format) {
+            alert(`Exporting ${chartId} as ${format}... (This would download the chart in a real app)`);
+        }
+
+        function exportData(format) {
+            alert(`Exporting data as ${format}... (This would download the data in a real app)`);
+        }
+
+        function exportTableData(format) {
+            alert(`Exporting table as ${format}... (This would download the table in a real app)`);
+        }
+
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load initial data
+            updateCharts();
+            loadTableData();
+            setupRealTimeUpdates();
+
+            // Set up export buttons
+            document.querySelectorAll('.export-options button').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                });
+            });
+        });

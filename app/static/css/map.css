@@ -1,0 +1,153 @@
+/* Map Controls CSS */
+
+/* Ensure map container has proper positioning */
+#map {
+    height: 90vh;
+    width: 100vw;
+    position: relative;
+    z-index: 1;
+}
+
+/* Increase z-index for all Leaflet controls */
+.leaflet-control {
+    z-index: 1000 !important;
+}
+
+/* Specific styling for layer control */
+.leaflet-control-layers {
+    background: #fff;
+    border-radius: 4px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    z-index: 1500 !important;
+}
+
+/* Specific styling for zoom control */
+.leaflet-control-zoom {
+    border-radius: 4px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    z-index: 1500 !important;
+}
+
+/* Specific styling for draw control */
+.leaflet-draw {
+    z-index: 1500 !important;
+}
+
+/* Ensure popups appear above other elements */
+.leaflet-popup {
+    z-index: 2000 !important;
+}
+
+/* Custom controls styling */
+#geocode-box {
+    position: absolute;
+    top: 60px; /* Adjusted to be below the nav bar */
+    left: 10px;
+    z-index: 1500;
+    background: #fff;
+    padding: 8px;
+    border-radius: 4px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+#map-utils {
+    position: absolute;
+    top: 60px; /* Adjusted to be below the nav bar */
+    right: 10px;
+    z-index: 1500;
+    background: #fff;
+    padding: 8px;
+    border-radius: 4px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Navigation bar styling */
+.nav-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #263238;
+    color: #fff;
+    display: flex;
+    gap: 0.5em;
+    padding: 0.5em 0 0.5em 220px;
+    z-index: 2500; /* Higher than map controls */
+}
+
+.nav-bar a {
+    color: #b0bec5;
+    text-decoration: none;
+    margin-right: 1.5em;
+    font-weight: bold;
+}
+
+.nav-bar a.active, .nav-bar a:hover {
+    color: #fff;
+    border-bottom: 2px solid #4caf50;
+}
+
+/* Media queries for responsiveness */
+@media (max-width: 768px) {
+    /* Adjust nav bar for mobile */
+    .nav-bar {
+        padding: 0.5em;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .nav-bar a {
+        margin-right: 0.8em;
+        font-size: 0.9em;
+    }
+    
+    /* Adjust map controls for mobile */
+    #geocode-box {
+        top: 100px; /* Further down to account for wrapped nav bar */
+        left: 10px;
+        width: calc(100% - 20px);
+        box-sizing: border-box;
+    }
+    
+    #geocode-input {
+        width: 70%;
+    }
+    
+    #map-utils {
+        top: auto;
+        bottom: 20px;
+        right: 10px;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    #map-utils button {
+        margin-bottom: 5px;
+    }
+    
+    /* Adjust Leaflet controls for mobile */
+    .leaflet-control-zoom {
+        margin-top: 100px !important;
+    }
+    
+    .leaflet-control-layers {
+        margin-top: 100px !important;
+    }
+}
+
+/* Ensure touch devices have larger touch targets */
+@media (pointer: coarse) {
+    .leaflet-control-zoom a {
+        padding: 5px;
+        font-size: 18px;
+    }
+    
+    .leaflet-control-layers-toggle {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .leaflet-draw-toolbar a {
+        padding: 5px;
+    }
+}
