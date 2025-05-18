@@ -753,4 +753,9 @@ class MonitoringSystem:
                 cursor = conn.cursor()
                 timestamp = datetime.datetime.utcnow().isoformat()
                 cursor.execute(
-                    'INSERT INTO metrics (timestamp, metric_name, value, labels) VALUES (?, ?, ?, ?)',
+                    'INSERT INTO metrics (timestamp, metric_name, value, labels) VALUES (?, ?, ?, ?)', 
+                    (timestamp, metric_name, value, json.dumps(labels or {})))
+                conn.commit()
+                logger.debug(f'Wrote metric {metric_name}: {value}')
+        except Exception as e:
+            logger.error(f'Error writing metric to database: {e}')
