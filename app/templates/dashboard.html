@@ -1,0 +1,475 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="mb-4">Dashboard</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card text-white bg-success mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Total Fields</h5>
+                <p class="card-text display-4" id="totalFields">0</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-primary mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Total Area</h5>
+                <p class="card-text display-4" id="totalArea">0</p>
+                <p class="card-text">hectares</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Crops</h5>
+                <p class="card-text display-4" id="totalCrops">0</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Reports</h5>
+                <p class="card-text display-4" id="totalReports">0</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Crop Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="cropDistributionChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Field Size Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="fieldSizeChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Recent Activity</h5>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="activityFilterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            Filter
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="activityFilterDropdown">
+                            <li><a class="dropdown-item activity-filter" data-filter="all" href="#">All Activities</a></li>
+                            <li><a class="dropdown-item activity-filter" data-filter="field" href="#">Field Updates</a></li>
+                            <li><a class="dropdown-item activity-filter" data-filter="crop" href="#">Crop Updates</a></li>
+                            <li><a class="dropdown-item activity-filter" data-filter="report" href="#">Reports</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="activity-list" id="activityList">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-success" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading activity data...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('fields') }}" class="btn btn-outline-success">
+                        <i class="bi bi-plus-circle"></i> Add New Field
+                    </a>
+                    <a href="{{ url_for('crops') }}" class="btn btn-outline-success">
+                        <i class="bi bi-plus-circle"></i> Add New Crop
+                    </a>
+                    <a href="{{ url_for('reports') }}" class="btn btn-outline-success">
+                        <i class="bi bi-plus-circle"></i> Create Report
+                    </a>
+                    <a href="{{ url_for('map') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-map"></i> View Map
+                    </a>
+                    <a href="{{ url_for('weather') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-cloud-sun"></i> Check Weather
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Upcoming Events</h5>
+            </div>
+            <div class="card-body">
+                <div id="upcomingEvents">
+                    <!-- Events will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Load dashboard data
+    function loadDashboardData() {
+        Promise.all([
+            fetch('/api/fields').then(response => response.json()),
+            fetch('/api/crops').then(response => response.json()),
+            fetch('/api/reports').then(response => response.json())
+        ])
+        .then(([fields, crops, reports]) => {
+            // Update summary cards
+            document.getElementById('totalFields').textContent = fields.length;
+            
+            const totalArea = fields.reduce((sum, field) => sum + field.area, 0);
+            document.getElementById('totalArea').textContent = totalArea.toFixed(2);
+            
+            document.getElementById('totalCrops').textContent = crops.length;
+            document.getElementById('totalReports').textContent = reports.length;
+            
+            // Create crop distribution chart
+            createCropDistributionChart(fields, crops);
+            
+            // Create field size chart
+            createFieldSizeChart(fields);
+            
+            // Load activity list
+            loadActivityList(fields, crops, reports);
+            
+            // Load upcoming events
+            loadUpcomingEvents(fields);
+        })
+        .catch(error => {
+            console.error('Error loading dashboard data:', error);
+            alert('Error loading dashboard data. Please try refreshing the page.');
+        });
+    }
+    
+    // Create crop distribution chart
+    function createCropDistributionChart(fields, crops) {
+        // Count fields by crop
+        const cropCounts = {};
+        crops.forEach(crop => {
+            cropCounts[crop.id] = 0;
+        });
+        
+        fields.forEach(field => {
+            if (field.crop_id && cropCounts[field.crop_id] !== undefined) {
+                cropCounts[field.crop_id]++;
+            }
+        });
+        
+        // Prepare chart data
+        const cropLabels = crops.map(crop => crop.name);
+        const cropData = crops.map(crop => cropCounts[crop.id]);
+        
+        // Generate random colors
+        const backgroundColors = crops.map(() => {
+            const r = Math.floor(Math.random() * 200);
+            const g = Math.floor(Math.random() * 200);
+            const b = Math.floor(Math.random() * 200);
+            return `rgba(${r}, ${g}, ${b}, 0.7)`;
+        });
+        
+        // Create chart
+        const ctx = document.getElementById('cropDistributionChart').getContext('2d');
+        const cropChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: cropLabels,
+                datasets: [{
+                    data: cropData,
+                    backgroundColor: backgroundColors,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `${label}: ${value} fields (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Create field size chart
+    function createFieldSizeChart(fields) {
+        // Group fields by size range
+        const sizeRanges = {
+            '0-5 ha': 0,
+            '5-10 ha': 0,
+            '10-20 ha': 0,
+            '20-50 ha': 0,
+            '50+ ha': 0
+        };
+        
+        fields.forEach(field => {
+            const size = field.area;
+            if (size <= 5) {
+                sizeRanges['0-5 ha']++;
+            } else if (size <= 10) {
+                sizeRanges['5-10 ha']++;
+            } else if (size <= 20) {
+                sizeRanges['10-20 ha']++;
+            } else if (size <= 50) {
+                sizeRanges['20-50 ha']++;
+            } else {
+                sizeRanges['50+ ha']++;
+            }
+        });
+        
+        // Prepare chart data
+        const sizeLabels = Object.keys(sizeRanges);
+        const sizeData = Object.values(sizeRanges);
+        
+        // Create chart
+        const ctx = document.getElementById('fieldSizeChart').getContext('2d');
+        const sizeChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: sizeLabels,
+                datasets: [{
+                    label: 'Number of Fields',
+                    data: sizeData,
+                    backgroundColor: 'rgba(76, 175, 80, 0.7)',
+                    borderColor: 'rgba(76, 175, 80, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Load activity list
+    function loadActivityList(fields, crops, reports) {
+        const activityList = document.getElementById('activityList');
+        activityList.innerHTML = '';
+        
+        // Combine and sort activities
+        const activities = [
+            ...fields.map(field => ({
+                type: 'field',
+                title: `Field "${field.name}" added`,
+                description: `A new field of ${field.area} hectares was added in ${field.location}.`,
+                date: new Date(field.created_at || Date.now())
+            })),
+            ...crops.map(crop => ({
+                type: 'crop',
+                title: `Crop "${crop.name}" added`,
+                description: `A new crop type was added with growing season: ${crop.growing_season}.`,
+                date: new Date(crop.created_at || Date.now())
+            })),
+            ...reports.map(report => ({
+                type: 'report',
+                title: `Report "${report.title}" created`,
+                description: `A new report was created for location: ${report.location}.`,
+                date: new Date(report.timestamp)
+            }))
+        ];
+        
+        // Sort by date (newest first)
+        activities.sort((a, b) => b.date - a.date);
+        
+        // Limit to 10 activities
+        const recentActivities = activities.slice(0, 10);
+        
+        if (recentActivities.length === 0) {
+            activityList.innerHTML = '<p class="text-center py-4">No recent activity found.</p>';
+            return;
+        }
+        
+        // Create activity items
+        recentActivities.forEach(activity => {
+            const activityItem = document.createElement('div');
+            activityItem.className = `activity-item ${activity.type} mb-3 pb-3 border-bottom`;
+            
+            const date = activity.date.toLocaleDateString() + ' ' + activity.date.toLocaleTimeString();
+            
+            let icon = '';
+            switch (activity.type) {
+                case 'field':
+                    icon = '<i class="bi bi-geo-alt text-success"></i>';
+                    break;
+                case 'crop':
+                    icon = '<i class="bi bi-flower3 text-warning"></i>';
+                    break;
+                case 'report':
+                    icon = '<i class="bi bi-file-text text-info"></i>';
+                    break;
+            }
+            
+            activityItem.innerHTML = `
+                <div class="d-flex">
+                    <div class="me-3">
+                        ${icon}
+                    </div>
+                    <div>
+                        <h6>${activity.title}</h6>
+                        <p class="mb-1">${activity.description}</p>
+                        <small class="text-muted">${date}</small>
+                    </div>
+                </div>
+            `;
+            
+            activityList.appendChild(activityItem);
+        });
+        
+        // Add activity filters
+        document.querySelectorAll('.activity-filter').forEach(filter => {
+            filter.addEventListener('click', function(e) {
+                e.preventDefault();
+                const filterType = this.getAttribute('data-filter');
+                
+                // Show all activities or filter by type
+                if (filterType === 'all') {
+                    document.querySelectorAll('.activity-item').forEach(item => {
+                        item.style.display = 'block';
+                    });
+                } else {
+                    document.querySelectorAll('.activity-item').forEach(item => {
+                        if (item.classList.contains(filterType)) {
+                            item.style.display = 'block';
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                }
+            });
+        });
+    }
+    
+    // Load upcoming events
+    function loadUpcomingEvents(fields) {
+        const eventsContainer = document.getElementById('upcomingEvents');
+        eventsContainer.innerHTML = '';
+        
+        // Get fields with upcoming planting or harvest dates
+        const today = new Date();
+        const upcomingEvents = [];
+        
+        fields.forEach(field => {
+            if (field.planting_date) {
+                const plantingDate = new Date(field.planting_date);
+                
+                if (plantingDate > today) {
+                    upcomingEvents.push({
+                        type: 'planting',
+                        field: field.name,
+                        date: plantingDate,
+                        crop: field.crop_name || 'N/A'
+                    });
+                }
+            }
+            
+            if (field.harvest_date) {
+                const harvestDate = new Date(field.harvest_date);
+                
+                if (harvestDate > today) {
+                    upcomingEvents.push({
+                        type: 'harvest',
+                        field: field.name,
+                        date: harvestDate,
+                        crop: field.crop_name || 'N/A'
+                    });
+                }
+            }
+        });
+        
+        // Sort by date (soonest first)
+        upcomingEvents.sort((a, b) => a.date - b.date);
+        
+        // Limit to 5 events
+        const events = upcomingEvents.slice(0, 5);
+        
+        if (events.length === 0) {
+            eventsContainer.innerHTML = '<p class="text-center">No upcoming events scheduled.</p>';
+            return;
+        }
+        
+        // Create event items
+        events.forEach(event => {
+            const eventItem = document.createElement('div');
+            eventItem.className = 'event-item mb-3 pb-2 border-bottom';
+            
+            const date = event.date.toLocaleDateString();
+            const daysUntil = Math.ceil((event.date - today) / (1000 * 60 * 60 * 24));
+            
+            const icon = event.type === 'planting' ? 
+                '<i class="bi bi-flower1 text-success"></i>' : 
+                '<i class="bi bi-basket text-warning"></i>';
+            
+            const eventType = event.type === 'planting' ? 'Planting' : 'Harvest';
+            
+            eventItem.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <div class="me-2">
+                        ${icon}
+                    </div>
+                    <div>
+                        <h6 class="mb-0">${eventType}: ${event.field}</h6>
+                        <small>Crop: ${event.crop}</small><br>
+                        <small class="text-muted">${date} (in ${daysUntil} days)</small>
+                    </div>
+                </div>
+            `;
+            
+            eventsContainer.appendChild(eventItem);
+        });
+    }
+    
+    // Load data when page loads
+    document.addEventListener('DOMContentLoaded', loadDashboardData);
+</script>
+{% endblock %}

@@ -1,18 +1,3 @@
-# Virtual Environment
-venv/
-
-# Python Cache Files
 __pycache__/
-
-# Environment Variables / Configs
+venv/
 config.py
-
-# Logs / Temporary Files
-*.log
-instance/
-*.tmp
-*.temp
-
-# IDE-Specific Files
-.vscode/
-.idea/

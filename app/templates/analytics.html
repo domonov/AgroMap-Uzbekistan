@@ -1,0 +1,929 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="mb-4">Analytics</h1>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs" id="analyticsTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="crop-yield-tab" data-bs-toggle="tab" data-bs-target="#crop-yield" type="button" role="tab" aria-controls="crop-yield" aria-selected="true">Crop Yield</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="weather-impact-tab" data-bs-toggle="tab" data-bs-target="#weather-impact" type="button" role="tab" aria-controls="weather-impact" aria-selected="false">Weather Impact</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="crop-trends-tab" data-bs-toggle="tab" data-bs-target="#crop-trends" type="button" role="tab" aria-controls="crop-trends" aria-selected="false">Crop Trends</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="predictions-tab" data-bs-toggle="tab" data-bs-target="#predictions" type="button" role="tab" aria-controls="predictions" aria-selected="false">Yield Predictions</button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content" id="analyticsTabContent">
+                    <!-- Crop Yield Analysis -->
+                    <div class="tab-pane fade show active" id="crop-yield" role="tabpanel" aria-labelledby="crop-yield-tab">
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="cropSelect" class="form-label">Select Crop</label>
+                                    <select class="form-select" id="cropSelect">
+                                        <option value="all">All Crops</option>
+                                        <!-- Crops will be loaded dynamically -->
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="yearSelect" class="form-label">Select Year</label>
+                                    <select class="form-select" id="yearSelect">
+                                        <option value="2025">2025</option>
+                                        <option value="2024">2024</option>
+                                        <option value="2023">2023</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="regionSelect" class="form-label">Select Region</label>
+                                    <select class="form-select" id="regionSelect">
+                                        <option value="all">All Regions</option>
+                                        <option value="tashkent">Tashkent</option>
+                                        <option value="samarkand">Samarkand</option>
+                                        <option value="bukhara">Bukhara</option>
+                                        <option value="fergana">Fergana Valley</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="chartTypeSelect" class="form-label">Chart Type</label>
+                                    <select class="form-select" id="chartTypeSelect">
+                                        <option value="bar">Bar Chart</option>
+                                        <option value="line">Line Chart</option>
+                                        <option value="pie">Pie Chart</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="chart-container" style="position: relative; height:400px;">
+                                    <canvas id="yieldChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <h5>Yield Statistics</h5>
+                                <table class="table table-striped" id="yieldStatsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Crop</th>
+                                            <th>Average Yield (t/ha)</th>
+                                            <th>Min Yield (t/ha)</th>
+                                            <th>Max Yield (t/ha)</th>
+                                            <th>Total Production (t)</th>
+                                            <th>Total Area (ha)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Stats will be loaded dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Weather Impact Analysis -->
+                    <div class="tab-pane fade" id="weather-impact" role="tabpanel" aria-labelledby="weather-impact-tab">
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="weatherCropSelect" class="form-label">Select Crop</label>
+                                    <select class="form-select" id="weatherCropSelect">
+                                        <!-- Crops will be loaded dynamically -->
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="weatherFactorSelect" class="form-label">Weather Factor</label>
+                                    <select class="form-select" id="weatherFactorSelect">
+                                        <option value="temperature">Temperature</option>
+                                        <option value="precipitation">Precipitation</option>
+                                        <option value="humidity">Humidity</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="timeRangeSelect" class="form-label">Time Range</label>
+                                    <select class="form-select" id="timeRangeSelect">
+                                        <option value="season">Growing Season</option>
+                                        <option value="year">Full Year</option>
+                                        <option value="custom">Custom Range</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="chart-container" style="position: relative; height:400px;">
+                                    <canvas id="weatherImpactChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Weather Impact Analysis</h5>
+                                    </div>
+                                    <div class="card-body" id="weatherAnalysisText">
+                                        <p>Select a crop and weather factor to see the analysis.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Crop Trends Analysis -->
+                    <div class="tab-pane fade" id="crop-trends" role="tabpanel" aria-labelledby="crop-trends-tab">
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="trendCropSelect" class="form-label">Select Crop</label>
+                                    <select class="form-select" id="trendCropSelect">
+                                        <option value="all">All Crops</option>
+                                        <!-- Crops will be loaded dynamically -->
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="trendMetricSelect" class="form-label">Metric</label>
+                                    <select class="form-select" id="trendMetricSelect">
+                                        <option value="area">Area</option>
+                                        <option value="yield">Yield</option>
+                                        <option value="production">Production</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="trendRangeSelect" class="form-label">Time Range</label>
+                                    <select class="form-select" id="trendRangeSelect">
+                                        <option value="5">Last 5 Years</option>
+                                        <option value="10">Last 10 Years</option>
+                                        <option value="all">All Available Data</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="chart-container" style="position: relative; height:400px;">
+                                    <canvas id="trendChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Trend Analysis</h5>
+                                    </div>
+                                    <div class="card-body" id="trendAnalysisText">
+                                        <p>Select a crop and metric to see the trend analysis.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Yield Predictions -->
+                    <div class="tab-pane fade" id="predictions" role="tabpanel" aria-labelledby="predictions-tab">
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="predictionCropSelect" class="form-label">Select Crop</label>
+                                    <select class="form-select" id="predictionCropSelect">
+                                        <!-- Crops will be loaded dynamically -->
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="predictionYearSelect" class="form-label">Prediction Year</label>
+                                    <select class="form-select" id="predictionYearSelect">
+                                        <option value="2025">2025</option>
+                                        <option value="2026">2026</option>
+                                        <option value="2027">2027</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="scenarioSelect" class="form-label">Weather Scenario</label>
+                                    <select class="form-select" id="scenarioSelect">
+                                        <option value="normal">Normal Conditions</option>
+                                        <option value="wet">Wet Conditions</option>
+                                        <option value="dry">Dry Conditions</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="chart-container" style="position: relative; height:400px;">
+                                    <canvas id="predictionChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Prediction Details</h5>
+                                    </div>
+                                    <div class="card-body" id="predictionDetails">
+                                        <div class="text-center py-4">
+                                            <div class="spinner-border text-success" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            <p class="mt-2">Generating prediction...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Factors Affecting Prediction</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="predictionFactors">
+                                            <p>Select a crop and scenario to see prediction factors.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Data Export</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="exportDataType" class="form-label">Data Type</label>
+                            <select class="form-select" id="exportDataType">
+                                <option value="yield">Yield Data</option>
+                                <option value="weather">Weather Data</option>
+                                <option value="predictions">Prediction Data</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="exportFormat" class="form-label">Format</label>
+                            <select class="form-select" id="exportFormat">
+                                <option value="csv">CSV</option>
+                                <option value="json">JSON</option>
+                                <option value="excel">Excel</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button class="btn btn-success" id="exportDataBtn">
+                                    <i class="bi bi-download"></i> Export Data
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Sample data (replace with actual API calls in production)
+    const sampleData = {
+        crops: [
+            { id: 1, name: 'Wheat' },
+            { id: 2, name: 'Cotton' },
+            { id: 3, name: 'Rice' },
+            { id: 4, name: 'Corn' },
+            { id: 5, name: 'Potatoes' }
+        ],
+        yields: {
+            wheat: [4.2, 3.8, 4.5, 4.1, 4.7],
+            cotton: [2.1, 2.4, 2.2, 2.5, 2.3],
+            rice: [5.5, 5.1, 5.3, 5.6, 5.4],
+            corn: [6.8, 6.5, 7.1, 6.9, 7.3],
+            potatoes: [20.5, 19.8, 21.2, 20.9, 21.5]
+        },
+        years: [2021, 2022, 2023, 2024, 2025],
+        regions: ['Tashkent', 'Samarkand', 'Bukhara', 'Fergana Valley'],
+        weather: {
+            temperature: [15, 18, 22, 25, 28, 32, 35, 33, 28, 22, 18, 15],
+            precipitation: [45, 50, 65, 70, 50, 25, 10, 5, 15, 40, 55, 60],
+            humidity: [70, 65, 60, 55, 50, 45, 40, 45, 50, 60, 65, 70]
+        },
+        months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        predictions: {
+            wheat: {
+                normal: { yield: 4.5, confidence: 0.85 },
+                wet: { yield: 4.8, confidence: 0.75 },
+                dry: { yield: 3.9, confidence: 0.80 }
+            },
+            cotton: {
+                normal: { yield: 2.4, confidence: 0.82 },
+                wet: { yield: 2.1, confidence: 0.78 },
+                dry: { yield: 2.0, confidence: 0.83 }
+            },
+            rice: {
+                normal: { yield: 5.4, confidence: 0.80 },
+                wet: { yield: 5.7, confidence: 0.75 },
+                dry: { yield: 4.8, confidence: 0.70 }
+            }
+        }
+    };
+    
+    // Initialize charts
+    let yieldChart = null;
+    let weatherImpactChart = null;
+    let trendChart = null;
+    let predictionChart = null;
+    
+    // Populate crop selects
+    function populateCropSelects() {
+        const cropSelectors = [
+            document.getElementById('cropSelect'),
+            document.getElementById('weatherCropSelect'),
+            document.getElementById('trendCropSelect'),
+            document.getElementById('predictionCropSelect')
+        ];
+        
+        sampleData.crops.forEach(crop => {
+            cropSelectors.forEach(selector => {
+                if (selector && !selector.querySelector(`option[value="${crop.id}"]`)) {
+                    const option = document.createElement('option');
+                    option.value = crop.id;
+                    option.textContent = crop.name;
+                    selector.appendChild(option);
+                }
+            });
+        });
+    }
+    
+    // Initialize Yield Chart
+    function initYieldChart() {
+        const ctx = document.getElementById('yieldChart').getContext('2d');
+        
+        yieldChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: sampleData.years,
+                datasets: [{
+                    label: 'Wheat Yield (t/ha)',
+                    data: sampleData.yields.wheat,
+                    backgroundColor: 'rgba(76, 175, 80, 0.7)',
+                    borderColor: 'rgba(76, 175, 80, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Yield (t/ha)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Year'
+                        }
+                    }
+                }
+            }
+        });
+        
+        updateYieldStats('Wheat', sampleData.yields.wheat);
+    }
+    
+    // Initialize Weather Impact Chart
+    function initWeatherImpactChart() {
+        const ctx = document.getElementById('weatherImpactChart').getContext('2d');
+        
+        weatherImpactChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: sampleData.months,
+                datasets: [
+                    {
+                        label: 'Temperature (°C)',
+                        data: sampleData.weather.temperature,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        yAxisID: 'y',
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Wheat Yield (t/ha)',
+                        data: Array(12).fill(sampleData.yields.wheat[4]),
+                        borderColor: 'rgba(76, 175, 80, 1)',
+                        backgroundColor: 'rgba(76, 175, 80, 0.2)',
+                        yAxisID: 'y1',
+                        type: 'bar'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Temperature (°C)'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        grid: {
+                            drawOnChartArea: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Yield (t/ha)'
+                        }
+                    }
+                }
+            }
+        });
+        
+        updateWeatherAnalysis('wheat', 'temperature');
+    }
+    
+    // Initialize Trend Chart
+    function initTrendChart() {
+        const ctx = document.getElementById('trendChart').getContext('2d');
+        
+        const years = [2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025];
+        const wheatData = [3.6, 3.8, 3.9, 4.0, 4.1, 4.2, 4.3, 4.5, 4.7, 4.9];
+        
+        trendChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: years,
+                datasets: [{
+                    label: 'Wheat Area (1000 ha)',
+                    data: wheatData,
+                    borderColor: 'rgba(76, 175, 80, 1)',
+                    backgroundColor: 'rgba(76, 175, 80, 0.2)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: {
+                            display: true,
+                            text: 'Area (1000 ha)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Year'
+                        }
+                    }
+                }
+            }
+        });
+        
+        updateTrendAnalysis('wheat', 'area', 10);
+    }
+    
+    // Initialize Prediction Chart
+    function initPredictionChart() {
+        const ctx = document.getElementById('predictionChart').getContext('2d');
+        
+        const years = [2021, 2022, 2023, 2024, 2025, 2026];
+        const historicalData = [4.1, 4.2, 4.3, 4.5, 4.7];
+        const predictionData = [...historicalData, 4.9];
+        const lowerBound = [...historicalData, 4.5];
+        const upperBound = [...historicalData, 5.3];
+        
+        predictionChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: years,
+                datasets: [
+                    {
+                        label: 'Historical Yield',
+                        data: [...historicalData, null],
+                        borderColor: 'rgba(76, 175, 80, 1)',
+                        backgroundColor: 'rgba(76, 175, 80, 0.2)',
+                        tension: 0.3,
+                        pointRadius: 5
+                    },
+                    {
+                        label: 'Predicted Yield',
+                        data: [null, null, null, null, null, predictionData[5]],
+                        borderColor: 'rgba(255, 193, 7, 1)',
+                        backgroundColor: 'rgba(255, 193, 7, 0.2)',
+                        tension: 0.3,
+                        pointRadius: 7,
+                        pointStyle: 'triangle'
+                    },
+                    {
+                        label: 'Prediction Range',
+                        data: [null, null, null, null, null, (lowerBound[5] + upperBound[5]) / 2],
+                        borderColor: 'rgba(255, 193, 7, 0.5)',
+                        backgroundColor: 'rgba(255, 193, 7, 0.2)',
+                        pointRadius: 0,
+                        fill: false,
+                        tension: 0.3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: {
+                            display: true,
+                            text: 'Yield (t/ha)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Year'
+                        }
+                    }
+                }
+            }
+        });
+        
+        updatePredictionDetails('wheat', '2026', 'normal');
+    }
+    
+    // Update Yield Stats
+    function updateYieldStats(cropName, yieldData) {
+        const tbody = document.querySelector('#yieldStatsTable tbody');
+        tbody.innerHTML = '';
+        
+        const avgYield = yieldData.reduce((a, b) => a + b, 0) / yieldData.length;
+        const minYield = Math.min(...yieldData);
+        const maxYield = Math.max(...yieldData);
+        const totalArea = 10000; // Example value, should come from API
+        const totalProduction = avgYield * totalArea / 1000;
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${cropName}</td>
+            <td>${avgYield.toFixed(2)}</td>
+            <td>${minYield.toFixed(2)}</td>
+            <td>${maxYield.toFixed(2)}</td>
+            <td>${totalProduction.toFixed(2)}</td>
+            <td>${totalArea.toLocaleString()}</td>
+        `;
+        
+        tbody.appendChild(row);
+    }
+    
+    // Update Weather Analysis
+    function updateWeatherAnalysis(crop, factor) {
+        const analysisEl = document.getElementById('weatherAnalysisText');
+        
+        let analysis = '';
+        
+        switch (factor) {
+            case 'temperature':
+                analysis = `<p>Analysis of temperature impact on ${crop} yield shows a strong correlation (r=0.78). Temperature during the growing season is a significant factor affecting yield.</p>
+                            <p>Optimal temperature range for ${crop} appears to be 20-25°C. Temperatures above 30°C during flowering stage can reduce yield by up to 15%.</p>
+                            <p>Historical data indicates that for every 1°C increase above the optimal range, yield decreases by approximately 7% for ${crop}.</p>`;
+                break;
+            case 'precipitation':
+                analysis = `<p>Analysis of precipitation impact on ${crop} yield shows a moderate correlation (r=0.62). Adequate water supply during critical growth stages is essential.</p>
+                            <p>Optimal precipitation for ${crop} is 500-700mm during the growing season. Water stress during grain filling can reduce yield by up to 20%.</p>
+                            <p>Historical data indicates that years with precipitation 30% below average resulted in yield reductions of 15-25% for ${crop}.</p>`;
+                break;
+            case 'humidity':
+                analysis = `<p>Analysis of humidity impact on ${crop} yield shows a weak correlation (r=0.34). Humidity affects disease pressure more than direct yield impact.</p>
+                            <p>High humidity (>80%) during extended periods increases risk of fungal diseases in ${crop}, potentially reducing yields by 10-30% if unmanaged.</p>
+                            <p>Optimal humidity range appears to be 50-70% for ${crop} development with minimal disease pressure.</p>`;
+                break;
+        }
+        
+        analysisEl.innerHTML = analysis;
+    }
+    
+    // Update Trend Analysis
+    function updateTrendAnalysis(crop, metric, years) {
+        const analysisEl = document.getElementById('trendAnalysisText');
+        
+        let analysis = '';
+        
+        switch (metric) {
+            case 'area':
+                analysis = `<p>Analysis of ${crop} planted area over the past ${years} years shows a steady increase with a compound annual growth rate (CAGR) of 2.8%.</p>
+                            <p>The total ${crop} area has increased from 950,000 hectares to 1,250,000 hectares in this period, reflecting growing demand and favorable policies.</p>
+                            <p>Projections indicate continued growth at 2-3% annually for the next 5 years, potentially reaching 1,400,000 hectares by 2030.</p>`;
+                break;
+            case 'yield':
+                analysis = `<p>Analysis of ${crop} yield trends over the past ${years} years shows a positive trend with an average annual increase of 1.9%.</p>
+                            <p>Yield improvements are primarily attributed to improved varieties (35%), better management practices (40%), and technology adoption (25%).</p>
+                            <p>Current yield gap analysis indicates potential for additional 30% yield increase through optimization of existing technologies.</p>`;
+                break;
+            case 'production':
+                analysis = `<p>Analysis of ${crop} production over the past ${years} years shows a significant increase with a CAGR of 4.7%.</p>
+                            <p>Total production has increased from 4.2 million tons to 6.5 million tons, driven by both area expansion and yield improvements.</p>
+                            <p>Production has outpaced domestic consumption growth (3.2% CAGR), resulting in increased export potential.</p>`;
+                break;
+        }
+        
+        analysisEl.innerHTML = analysis;
+    }
+    
+    // Update Prediction Details
+    function updatePredictionDetails(crop, year, scenario) {
+        const detailsEl = document.getElementById('predictionDetails');
+        const factorsEl = document.getElementById('predictionFactors');
+        
+        // Get prediction data from sample data (replace with API call)
+        const cropName = sampleData.crops.find(c => c.id.toString() === crop || c.name.toLowerCase() === crop.toLowerCase())?.name || 'Wheat';
+        const cropKey = cropName.toLowerCase();
+        
+        let predictionData = { yield: 4.5, confidence: 0.85 };
+        
+        if (sampleData.predictions[cropKey] && sampleData.predictions[cropKey][scenario]) {
+            predictionData = sampleData.predictions[cropKey][scenario];
+        }
+        
+        const confidencePercent = Math.round(predictionData.confidence * 100);
+        const confidenceClass = confidencePercent >= 80 ? 'text-success' : confidencePercent >= 60 ? 'text-warning' : 'text-danger';
+        
+        // Update prediction details
+        detailsEl.innerHTML = `
+            <h6 class="mb-3">${cropName} Yield Prediction for ${year}</h6>
+            <div class="text-center mb-3">
+                <span class="display-4">${predictionData.yield.toFixed(1)}</span>
+                <span class="fs-5">t/ha</span>
+            </div>
+            <div class="progress mb-2">
+                <div class="progress-bar bg-success" role="progressbar" style="width: ${confidencePercent}%" aria-valuenow="${confidencePercent}" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            <p class="text-center ${confidenceClass} mb-3">Confidence: ${confidencePercent}%</p>
+            <div class="d-flex justify-content-between mb-1">
+                <span>Historical Average:</span>
+                <span>4.3 t/ha</span>
+            </div>
+            <div class="d-flex justify-content-between mb-1">
+                <span>Potential Range:</span>
+                <span>4.1 - 4.9 t/ha</span>
+            </div>
+            <div class="d-flex justify-content-between mb-1">
+                <span>Probability of Increase:</span>
+                <span>75%</span>
+            </div>
+        `;
+        
+        // Update prediction factors
+        let factorsHtml = '<div class="row">';
+        
+        const factors = [
+            { name: 'Temperature', impact: 'Positive', value: '+8%', description: 'Favorable temperatures expected during critical growth stages' },
+            { name: 'Precipitation', impact: scenario === 'dry' ? 'Negative' : 'Positive', value: scenario === 'dry' ? '-12%' : '+5%', description: scenario === 'dry' ? 'Below average rainfall expected' : 'Adequate rainfall distribution anticipated' },
+            { name: 'Technology', impact: 'Positive', value: '+10%', description: 'Increased adoption of precision agriculture technologies' },
+            { name: 'Soil Quality', impact: 'Neutral', value: '0%', description: 'No significant changes in soil quality expected' },
+            { name: 'Disease Pressure', impact: scenario === 'wet' ? 'Negative' : 'Neutral', value: scenario === 'wet' ? '-7%' : '0%', description: scenario === 'wet' ? 'Increased disease pressure due to high humidity' : 'Normal disease pressure expected' },
+            { name: 'Input Use', impact: 'Positive', value: '+5%', description: 'Optimized fertilizer and pesticide application' }
+        ];
+        
+        factors.forEach(factor => {
+            const impactClass = factor.impact === 'Positive' ? 'text-success' : factor.impact === 'Negative' ? 'text-danger' : 'text-secondary';
+            
+            factorsHtml += `
+                <div class="col-md-6 mb-3">
+                    <div class="card border-light">
+                        <div class="card-body">
+                            <h6>${factor.name}</h6>
+                            <p class="mb-1 ${impactClass}">Impact: ${factor.impact} (${factor.value})</p>
+                            <small class="text-muted">${factor.description}</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        factorsHtml += '</div>';
+        factorsEl.innerHTML = factorsHtml;
+    }
+    
+    // Event Listeners for Chart Updates
+    document.getElementById('cropSelect').addEventListener('change', function() {
+        const cropId = this.value;
+        if (cropId === 'all') {
+            // Show data for all crops
+        } else {
+            const cropName = sampleData.crops.find(c => c.id.toString() === cropId)?.name || 'Wheat';
+            const cropKey = cropName.toLowerCase();
+            
+            // Update chart data
+            yieldChart.data.datasets[0].label = `${cropName} Yield (t/ha)`;
+            yieldChart.data.datasets[0].data = sampleData.yields[cropKey] || sampleData.yields.wheat;
+            yieldChart.update();
+            
+            // Update stats table
+            updateYieldStats(cropName, sampleData.yields[cropKey] || sampleData.yields.wheat);
+        }
+    });
+    
+    document.getElementById('chartTypeSelect').addEventListener('change', function() {
+        const chartType = this.value;
+        yieldChart.config.type = chartType;
+        yieldChart.update();
+    });
+    
+    document.getElementById('weatherFactorSelect').addEventListener('change', function() {
+        const factor = this.value;
+        const crop = document.getElementById('weatherCropSelect').value;
+        const cropName = sampleData.crops.find(c => c.id.toString() === crop)?.name || 'Wheat';
+        const cropKey = cropName.toLowerCase();
+        
+        // Update chart data
+        weatherImpactChart.data.datasets[0].label = `${factor.charAt(0).toUpperCase() + factor.slice(1)} ${factor === 'temperature' ? '(°C)' : factor === 'precipitation' ? '(mm)' : '(%)'}`;
+        weatherImpactChart.data.datasets[0].data = sampleData.weather[factor] || sampleData.weather.temperature;
+        
+        // Update axis label
+        weatherImpactChart.options.scales.y.title.text = `${factor.charAt(0).toUpperCase() + factor.slice(1)} ${factor === 'temperature' ? '(°C)' : factor === 'precipitation' ? '(mm)' : '(%)'}`;
+        
+        weatherImpactChart.update();
+        
+        // Update analysis text
+        updateWeatherAnalysis(cropKey, factor);
+    });
+    
+    document.getElementById('weatherCropSelect').addEventListener('change', function() {
+        const crop = this.value;
+        const factor = document.getElementById('weatherFactorSelect').value;
+        const cropName = sampleData.crops.find(c => c.id.toString() === crop)?.name || 'Wheat';
+        const cropKey = cropName.toLowerCase();
+        
+        // Update chart data
+        weatherImpactChart.data.datasets[1].label = `${cropName} Yield (t/ha)`;
+        weatherImpactChart.data.datasets[1].data = Array(12).fill(sampleData.yields[cropKey][4] || sampleData.yields.wheat[4]);
+        weatherImpactChart.update();
+        
+        // Update analysis text
+        updateWeatherAnalysis(cropKey, factor);
+    });
+    
+    document.getElementById('trendMetricSelect').addEventListener('change', function() {
+        const metric = this.value;
+        const crop = document.getElementById('trendCropSelect').value;
+        const range = document.getElementById('trendRangeSelect').value;
+        const cropName = sampleData.crops.find(c => c.id.toString() === crop)?.name || 'Wheat';
+        const cropKey = cropName.toLowerCase();
+        
+        // Update chart title
+        trendChart.data.datasets[0].label = `${cropName} ${metric.charAt(0).toUpperCase() + metric.slice(1)} ${metric === 'area' ? '(1000 ha)' : metric === 'yield' ? '(t/ha)' : '(1000 t)'}`;
+        
+        // Update y-axis label
+        trendChart.options.scales.y.title.text = `${metric.charAt(0).toUpperCase() + metric.slice(1)} ${metric === 'area' ? '(1000 ha)' : metric === 'yield' ? '(t/ha)' : '(1000 t)'}`;
+        
+        trendChart.update();
+        
+        // Update analysis text
+        updateTrendAnalysis(cropKey, metric, range);
+    });
+    
+    document.getElementById('trendCropSelect').addEventListener('change', function() {
+        const crop = this.value;
+        const metric = document.getElementById('trendMetricSelect').value;
+        const range = document.getElementById('trendRangeSelect').value;
+        const cropName = sampleData.crops.find(c => c.id.toString() === crop)?.name || 'Wheat';
+        const cropKey = cropName.toLowerCase();
+        
+        // Update chart title
+        trendChart.data.datasets[0].label = `${cropName} ${metric.charAt(0).toUpperCase() + metric.slice(1)} ${metric === 'area' ? '(1000 ha)' : metric === 'yield' ? '(t/ha)' : '(1000 t)'}`;
+        trendChart.update();
+        
+        // Update analysis text
+        updateTrendAnalysis(cropKey, metric, range);
+    });
+    
+    document.getElementById('trendRangeSelect').addEventListener('change', function() {
+        const range = this.value;
+        const crop = document.getElementById('trendCropSelect').value;
+        const metric = document.getElementById('trendMetricSelect').value;
+        const cropName = sampleData.crops.find(c => c.id.toString() === crop)?.name || 'Wheat';
+        const cropKey = cropName.toLowerCase();
+        
+        // Update analysis text
+        updateTrendAnalysis(cropKey, metric, range);
+    });
+    
+    document.getElementById('predictionCropSelect').addEventListener('change', function() {
+        const crop = this.value;
+        const year = document.getElementById('predictionYearSelect').value;
+        const scenario = document.getElementById('scenarioSelect').value;
+        
+        // Update prediction details
+        updatePredictionDetails(crop, year, scenario);
+    });
+    
+    document.getElementById('predictionYearSelect').addEventListener('change', function() {
+        const year = this.value;
+        const crop = document.getElementById('predictionCropSelect').value;
+        const scenario = document.getElementById('scenarioSelect').value;
+        
+        // Update x-axis for prediction chart
+        const years = [2021, 2022, 2023, 2024, 2025];
+        years.push(parseInt(year));
+        
+        predictionChart.data.labels = years;
+        predictionChart.update();
+        
+        // Update prediction details
+        updatePredictionDetails(crop, year, scenario);
+    });
+    
+    document.getElementById('scenarioSelect').addEventListener('change', function() {
+        const scenario = this.value;
+        const crop = document.getElementById('predictionCropSelect').value;
+        const year = document.getElementById('predictionYearSelect').value;
+        
+        // Update prediction details
+        updatePredictionDetails(crop, year, scenario);
+    });
+    
+    document.getElementById('exportDataBtn').addEventListener('click', function() {
+        const dataType = document.getElementById('exportDataType').value;
+        const format = document.getElementById('exportFormat').value;
+        
+        alert(`Exporting ${dataType} data in ${format.toUpperCase()} format. This feature will be implemented in the production version.`);
+    });
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        populateCropSelects();
+        initYieldChart();
+        initWeatherImpactChart();
+        initTrendChart();
+        initPredictionChart();
+    });
+</script>
+{% endblock %}

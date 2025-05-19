@@ -1,0 +1,744 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="mb-4">User Profile</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Profile Information</h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <div class="profile-avatar mb-3">
+                        <span class="bg-primary text-white display-4 rounded-circle d-inline-block" style="width: 100px; height: 100px; line-height: 100px;">
+                            {{ current_user.username[0].upper() }}
+                        </span>
+                    </div>
+                    <h4>{{ current_user.username }}</h4>
+                    <p class="text-muted">{{ current_user.email }}</p>
+                    <p><span class="badge bg-success">{{ current_user.role }}</span></p>
+                </div>
+                <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                    <i class="bi bi-pencil"></i> Edit Profile
+                </button>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Account Settings</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <a href="#" class="list-group-item list-group-item-action" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Change Password</strong>
+                                <div class="text-muted small">Update your password</div>
+                            </div>
+                            <i class="bi bi-chevron-right"></i>
+                        </div>
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" data-bs-toggle="modal" data-bs-target="#notificationSettingsModal">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Notification Settings</strong>
+                                <div class="text-muted small">Manage your notifications</div>
+                            </div>
+                            <i class="bi bi-chevron-right"></i>
+                        </div>
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong class="text-danger">Delete Account</strong>
+                                <div class="text-muted small">Permanently delete your account</div>
+                            </div>
+                            <i class="bi bi-chevron-right"></i>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Activity Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4 mb-3">
+                        <div class="card border-light bg-light h-100">
+                            <div class="card-body">
+                                <h6 class="card-title">Fields</h6>
+                                <p class="display-4" id="userFieldCount">0</p>
+                                <p class="text-muted">Total area: <span id="userFieldArea">0</span> ha</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card border-light bg-light h-100">
+                            <div class="card-body">
+                                <h6 class="card-title">Reports</h6>
+                                <p class="display-4" id="userReportCount">0</p>
+                                <p class="text-muted">Last report: <span id="userLastReport">Never</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card border-light bg-light h-100">
+                            <div class="card-body">
+                                <h6 class="card-title">Login Activity</h6>
+                                <p class="display-4" id="loginDays">0</p>
+                                <p class="text-muted">Last login: <span id="lastLoginTime">Now</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Activity</h5>
+            </div>
+            <div class="card-body">
+                <div class="activity-timeline" id="userActivityTimeline">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-success" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading activity data...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Preferences</h5>
+            </div>
+            <div class="card-body">
+                <form id="userPreferencesForm">
+                    <div class="mb-3">
+                        <label class="form-label">Default Map View</label>
+                        <select class="form-select" id="defaultMapView">
+                            <option value="uzbekistan">Uzbekistan</option>
+                            <option value="tashkent">Tashkent</option>
+                            <option value="samarkand">Samarkand</option>
+                            <option value="bukhara">Bukhara</option>
+                            <option value="fergana">Fergana Valley</option>
+                            <option value="my-fields">My Fields</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Temperature Unit</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tempUnit" id="tempCelsius" value="celsius" checked>
+                            <label class="form-check-label" for="tempCelsius">
+                                Celsius (°C)
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tempUnit" id="tempFahrenheit" value="fahrenheit">
+                            <label class="form-check-label" for="tempFahrenheit">
+                                Fahrenheit (°F)
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Area Unit</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="areaUnit" id="areaHectare" value="hectare" checked>
+                            <label class="form-check-label" for="areaHectare">
+                                Hectares (ha)
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="areaUnit" id="areaAcre" value="acre">
+                            <label class="form-check-label" for="areaAcre">
+                                Acres (ac)
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="enableNotifications" checked>
+                        <label class="form-check-label" for="enableNotifications">
+                            Enable Email Notifications
+                        </label>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="enableAlerts" checked>
+                        <label class="form-check-label" for="enableAlerts">
+                            Enable Weather Alerts
+                        </label>
+                    </div>
+                    <button type="button" class="btn btn-primary" id="savePreferencesBtn">Save Preferences</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Profile</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editProfileForm">
+                    <div class="mb-3">
+                        <label for="profileUsername" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="profileUsername" value="{{ current_user.username }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="profileEmail" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="profileEmail" value="{{ current_user.email }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="profileBio" class="form-label">Bio/Description</label>
+                        <textarea class="form-control" id="profileBio" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="profilePhone" class="form-label">Phone Number</label>
+                        <input type="tel" class="form-control" id="profilePhone">
+                    </div>
+                    <div class="mb-3">
+                        <label for="profileAddress" class="form-label">Address</label>
+                        <input type="text" class="form-control" id="profileAddress">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveProfileBtn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Change Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="changePasswordForm">
+                    <div class="mb-3">
+                        <label for="currentPassword" class="form-label">Current Password</label>
+                        <input type="password" class="form-control" id="currentPassword" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newPassword" class="form-label">New Password</label>
+                        <input type="password" class="form-control" id="newPassword" required>
+                        <div class="form-text">Password must be at least 8 characters long and include a number and special character.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                        <input type="password" class="form-control" id="confirmPassword" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="changePasswordBtn">Change Password</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notification Settings Modal -->
+<div class="modal fade" id="notificationSettingsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Notification Settings</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="notificationSettingsForm">
+                    <h6 class="mb-3">Email Notifications</h6>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="emailWeatherAlerts" checked>
+                        <label class="form-check-label" for="emailWeatherAlerts">
+                            Weather Alerts
+                        </label>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="emailCropReminders" checked>
+                        <label class="form-check-label" for="emailCropReminders">
+                            Crop Calendar Reminders
+                        </label>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="emailReportUpdates" checked>
+                        <label class="form-check-label" for="emailReportUpdates">
+                            Report Updates
+                        </label>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="emailSystemNotices" checked>
+                        <label class="form-check-label" for="emailSystemNotices">
+                            System Notices
+                        </label>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h6 class="mb-3">In-App Notifications</h6>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="appWeatherAlerts" checked>
+                        <label class="form-check-label" for="appWeatherAlerts">
+                            Weather Alerts
+                        </label>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="appCropReminders" checked>
+                        <label class="form-check-label" for="appCropReminders">
+                            Crop Calendar Reminders
+                        </label>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="appReportUpdates" checked>
+                        <label class="form-check-label" for="appReportUpdates">
+                            Report Updates
+                        </label>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="appSystemNotices" checked>
+                        <label class="form-check-label" for="appSystemNotices">
+                            System Notices
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveNotificationSettingsBtn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Modal -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <h6 class="alert-heading">Warning: This action cannot be undone!</h6>
+                    <p>Deleting your account will permanently remove all your data, including fields, reports, and personal information. This action cannot be reversed.</p>
+                </div>
+                <p>To confirm, please type "DELETE" in the field below:</p>
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="deleteConfirmation" placeholder="Type DELETE to confirm">
+                </div>
+                <div class="mb-3">
+                    <label for="deleteReason" class="form-label">Reason for leaving (optional):</label>
+                    <textarea class="form-control" id="deleteReason" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="deleteAccountBtn" disabled>Delete Account</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Load user activity data
+    function loadUserActivityData() {
+        Promise.all([
+            fetch('/api/fields').then(response => response.json()),
+            fetch('/api/reports').then(response => response.json())
+        ])
+        .then(([fields, reports]) => {
+            // Update summary cards
+            document.getElementById('userFieldCount').textContent = fields.length;
+            
+            const totalArea = fields.reduce((sum, field) => sum + field.area, 0);
+            document.getElementById('userFieldArea').textContent = totalArea.toFixed(2);
+            
+            document.getElementById('userReportCount').textContent = reports.length;
+            
+            if (reports.length > 0) {
+                const lastReport = new Date(reports[0].timestamp);
+                document.getElementById('userLastReport').textContent = lastReport.toLocaleDateString();
+            }
+            
+            // Just a placeholder - would come from backend in real app
+            document.getElementById('loginDays').textContent = '15';
+            document.getElementById('lastLoginTime').textContent = new Date().toLocaleDateString();
+            
+            // Load activity timeline
+            loadActivityTimeline(fields, reports);
+        })
+        .catch(error => {
+            console.error('Error loading user data:', error);
+            alert('Error loading user data. Please try refreshing the page.');
+        });
+    }
+    
+    // Load activity timeline
+    function loadActivityTimeline(fields, reports) {
+        const timelineEl = document.getElementById('userActivityTimeline');
+        timelineEl.innerHTML = '';
+        
+        // Combine and sort activities
+        const activities = [
+            ...fields.map(field => ({
+                type: 'field',
+                title: `Added field "${field.name}"`,
+                description: `Added a new field of ${field.area} hectares in ${field.location}.`,
+                date: new Date(field.created_at || Date.now())
+            })),
+            ...reports.map(report => ({
+                type: 'report',
+                title: `Created report "${report.title}"`,
+                description: `Created a new report for location: ${report.location}.`,
+                date: new Date(report.timestamp)
+            }))
+        ];
+        
+        // Add some login activities (placeholder - would come from backend)
+        const today = new Date();
+        activities.push({
+            type: 'login',
+            title: 'Logged in',
+            description: 'Logged in to the system.',
+            date: today
+        });
+        
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        activities.push({
+            type: 'login',
+            title: 'Logged in',
+            description: 'Logged in to the system.',
+            date: yesterday
+        });
+        
+        // Sort by date (newest first)
+        activities.sort((a, b) => b.date - a.date);
+        
+        // Limit to 10 activities
+        const recentActivities = activities.slice(0, 10);
+        
+        if (recentActivities.length === 0) {
+            timelineEl.innerHTML = '<p class="text-center py-4">No activity found.</p>';
+            return;
+        }
+        
+        // Create timeline
+        recentActivities.forEach((activity, index) => {
+            const timelineItem = document.createElement('div');
+            timelineItem.className = `timeline-item ${activity.type} pb-3 ${index < recentActivities.length - 1 ? 'position-relative' : ''}`;
+            
+            if (index < recentActivities.length - 1) {
+                timelineItem.innerHTML = `<div class="timeline-line"></div>`;
+            }
+            
+            const date = activity.date.toLocaleDateString() + ' ' + activity.date.toLocaleTimeString();
+            
+            let icon = '';
+            switch (activity.type) {
+                case 'field':
+                    icon = '<i class="bi bi-geo-alt text-success"></i>';
+                    break;
+                case 'report':
+                    icon = '<i class="bi bi-file-text text-info"></i>';
+                    break;
+                case 'login':
+                    icon = '<i class="bi bi-box-arrow-in-right text-primary"></i>';
+                    break;
+            }
+            
+            timelineItem.innerHTML += `
+                <div class="d-flex mb-3">
+                    <div class="timeline-icon me-3">
+                        ${icon}
+                    </div>
+                    <div>
+                        <h6 class="mb-1">${activity.title}</h6>
+                        <p class="mb-1">${activity.description}</p>
+                        <small class="text-muted">${date}</small>
+                    </div>
+                </div>
+            `;
+            
+            timelineEl.appendChild(timelineItem);
+        });
+    }
+    
+    // Save profile changes
+    document.getElementById('saveProfileBtn').addEventListener('click', function() {
+        const username = document.getElementById('profileUsername').value;
+        const email = document.getElementById('profileEmail').value;
+        const bio = document.getElementById('profileBio').value;
+        const phone = document.getElementById('profilePhone').value;
+        const address = document.getElementById('profileAddress').value;
+        
+        if (!username || !email) {
+            alert('Username and email are required.');
+            return;
+        }
+        
+        fetch('/api/user/profile', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                username: username,
+                email: email,
+                bio: bio,
+                phone: phone,
+                address: address
+            })
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            }
+            throw new Error('Network response was not ok');
+        })
+        .then(data => {
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('editProfileModal')).hide();
+            
+            // Update profile information on page
+            document.querySelector('.profile-avatar span').textContent = username[0].toUpperCase();
+            document.querySelector('h4').textContent = username;
+            document.querySelector('p.text-muted').textContent = email;
+            
+            alert('Profile updated successfully!');
+        })
+        .catch(error => {
+            console.error('Error updating profile:', error);
+            alert('Error updating profile. Please try again.');
+        });
+    });
+    
+    // Change password
+    document.getElementById('changePasswordBtn').addEventListener('click', function() {
+        const currentPassword = document.getElementById('currentPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            alert('All fields are required.');
+            return;
+        }
+        
+        if (newPassword !== confirmPassword) {
+            alert('New passwords do not match.');
+            return;
+        }
+        
+        if (newPassword.length < 8) {
+            alert('New password must be at least 8 characters long.');
+            return;
+        }
+        
+        fetch('/api/user/change-password', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                current_password: currentPassword,
+                new_password: newPassword
+            })
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            }
+            throw new Error('Network response was not ok');
+        })
+        .then(data => {
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('changePasswordModal')).hide();
+            
+            // Reset form
+            document.getElementById('changePasswordForm').reset();
+            
+            alert('Password changed successfully!');
+        })
+        .catch(error => {
+            console.error('Error changing password:', error);
+            alert('Error changing password. Please check your current password and try again.');
+        });
+    });
+    
+    // Save notification settings
+    document.getElementById('saveNotificationSettingsBtn').addEventListener('click', function() {
+        const settings = {
+            email: {
+                weather_alerts: document.getElementById('emailWeatherAlerts').checked,
+                crop_reminders: document.getElementById('emailCropReminders').checked,
+                report_updates: document.getElementById('emailReportUpdates').checked,
+                system_notices: document.getElementById('emailSystemNotices').checked
+            },
+            app: {
+                weather_alerts: document.getElementById('appWeatherAlerts').checked,
+                crop_reminders: document.getElementById('appCropReminders').checked,
+                report_updates: document.getElementById('appReportUpdates').checked,
+                system_notices: document.getElementById('appSystemNotices').checked
+            }
+        };
+        
+        fetch('/api/user/notification-settings', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(settings)
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            }
+            throw new Error('Network response was not ok');
+        })
+        .then(data => {
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('notificationSettingsModal')).hide();
+            
+            alert('Notification settings updated successfully!');
+        })
+        .catch(error => {
+            console.error('Error updating notification settings:', error);
+            alert('Error updating notification settings. Please try again.');
+        });
+    });
+    
+    // Save user preferences
+    document.getElementById('savePreferencesBtn').addEventListener('click', function() {
+        const preferences = {
+            default_map_view: document.getElementById('defaultMapView').value,
+            temperature_unit: document.querySelector('input[name="tempUnit"]:checked').value,
+            area_unit: document.querySelector('input[name="areaUnit"]:checked').value,
+            enable_notifications: document.getElementById('enableNotifications').checked,
+            enable_alerts: document.getElementById('enableAlerts').checked
+        };
+        
+        fetch('/api/user/preferences', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(preferences)
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            }
+            throw new Error('Network response was not ok');
+        })
+        .then(data => {
+            alert('Preferences saved successfully!');
+        })
+        .catch(error => {
+            console.error('Error saving preferences:', error);
+            alert('Error saving preferences. Please try again.');
+        });
+    });
+    
+    // Delete account confirmation field
+    document.getElementById('deleteConfirmation').addEventListener('input', function() {
+        const deleteBtn = document.getElementById('deleteAccountBtn');
+        if (this.value === 'DELETE') {
+            deleteBtn.disabled = false;
+        } else {
+            deleteBtn.disabled = true;
+        }
+    });
+    
+    // Delete account
+    document.getElementById('deleteAccountBtn').addEventListener('click', function() {
+        const confirmation = document.getElementById('deleteConfirmation').value;
+        const reason = document.getElementById('deleteReason').value;
+        
+        if (confirmation !== 'DELETE') {
+            alert('Please type DELETE to confirm account deletion.');
+            return;
+        }
+        
+        fetch('/api/user/delete-account', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                reason: reason
+            })
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            }
+            throw new Error('Network response was not ok');
+        })
+        .then(data => {
+            // Redirect to home page
+            window.location.href = '/';
+        })
+        .catch(error => {
+            console.error('Error deleting account:', error);
+            alert('Error deleting account. Please try again.');
+        });
+    });
+    
+    // Load data when page loads
+    document.addEventListener('DOMContentLoaded', loadUserActivityData);
+</script>
+
+<style>
+    .timeline-item {
+        position: relative;
+        padding-left: 30px;
+    }
+    
+    .timeline-line {
+        position: absolute;
+        left: 12px;
+        top: 24px;
+        bottom: 0;
+        width: 2px;
+        background-color: #dee2e6;
+    }
+    
+    .timeline-icon {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+    }
+</style>
+{% endblock %}

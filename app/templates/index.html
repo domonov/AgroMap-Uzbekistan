@@ -1,25 +1,86 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AgroMap Uzbekistan</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <div id="map"></div>
+{% extends "base.html" %}
 
-    <!-- Leaflet Script Placed Before Closing Body Tag -->
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script>
-        console.log("Leaflet script loaded!"); // Debugging check
+{% block content %}
+<div class="row">
+    <div class="col-md-12 text-center">
+        <h1>AgroMap Uzbekistan</h1>
+        <p class="lead">Empowering farmers with data-driven insights for better agriculture</p>
+    </div>
+</div>
 
-        var map = L.map('map').setView([41.2995, 69.2401], 6);
+<div class="row mt-5">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Interactive Map</h5>
+                <p class="card-text">Explore agricultural fields, crops, and weather data across Uzbekistan.</p>
+                <a href="{{ url_for('map') }}" class="btn btn-success">Open Map</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Weather Information</h5>
+                <p class="card-text">Get real-time weather data and forecasts for your location.</p>
+                <a href="{{ url_for('weather') }}" class="btn btn-success">Check Weather</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Analytics</h5>
+                <p class="card-text">Access agricultural data analytics and predictive insights.</p>
+                <a href="{{ url_for('analytics') }}" class="btn btn-success">View Analytics</a>
+            </div>
+        </div>
+    </div>
+</div>
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
-    </script>
-</body>
-</html>
+<div class="row mt-5">
+    <div class="col-md-12">
+        <h2>About AgroMap Uzbekistan</h2>
+        <p>
+            AgroMap Uzbekistan is a transformative agricultural platform designed to empower 
+            Uzbekistan's farming community with data-driven insights, predictive analytics, 
+            and collaborative mapping capabilities. Our goal is to enhance agricultural productivity, 
+            sustainability, and resilience through innovative technology solutions.
+        </p>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <h3>Key Features</h3>
+        <ul>
+            <li>Interactive mapping of agricultural fields</li>
+            <li>Crop management and reporting</li>
+            <li>Real-time weather data and forecasts</li>
+            <li>Agricultural analytics and visualization</li>
+            <li>Predictive models for crop planning</li>
+            <li>Mobile-friendly interface with offline support</li>
+        </ul>
+    </div>
+    <div class="col-md-6">
+        <h3>Benefits</h3>
+        <ul>
+            <li>Make informed decisions based on data</li>
+            <li>Track and manage your agricultural fields</li>
+            <li>Plan crop cycles based on weather patterns</li>
+            <li>Identify trends and optimize productivity</li>
+            <li>Collaborate with other farmers and experts</li>
+            <li>Access information anytime, anywhere</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Check if offline
+    if (!navigator.onLine) {
+        document.querySelector('.container').innerHTML = '<div class="alert alert-warning">You are currently offline. Some features may be limited.</div>' + document.querySelector('.container').innerHTML;
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="mb-4">Weather Information</h1>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Current Weather</h5>
+            </div>
+            <div class="card-body">
+                {% if weather %}
+                <div class="row">
+                    <div class="col-md-4 text-center">
+                        <h2>{{ weather.location }}</h2>
+                        <p class="text-muted">{{ weather.timestamp }}</p>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <h1 class="display-4">{{ weather.temperature }}°C</h1>
+                        <p>
+                            <i class="bi bi-droplet-fill text-primary"></i> Humidity: {{ weather.humidity }}%<br>
+                            <i class="bi bi-cloud-rain-fill text-primary"></i> Precipitation: {{ weather.precipitation }}mm<br>
+                            <i class="bi bi-wind text-primary"></i> Wind: {{ weather.wind_speed }} km/h
+                        </p>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" id="locationSearch" placeholder="Enter location">
+                            <button class="btn btn-primary" type="button" id="searchWeatherBtn">Search</button>
+                        </div>
+                        <div class="d-grid">
+                            <button class="btn btn-outline-primary btn-sm" id="getCurrentLocationBtn">
+                                <i class="bi bi-geo-alt"></i> Use Current Location
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="alert alert-warning">
+                    <p>No current weather data available. Please search for a location.</p>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" id="locationSearch" placeholder="Enter location">
+                        <button class="btn btn-primary" type="button" id="searchWeatherBtn">Search</button>
+                    </div>
+                    <div class="d-grid">
+                        <button class="btn btn-outline-primary btn-sm" id="getCurrentLocationBtn">
+                            <i class="bi bi-geo-alt"></i> Use Current Location
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">7-Day Forecast</h5>
+            </div>
+            <div class="card-body">
+                <div class="forecast-container d-flex flex-wrap justify-content-between" id="forecastContainer">
+                    {% if weather and weather.forecast %}
+                        <!-- Forecast data will be populated here -->
+                    {% else %}
+                        <p class="text-center w-100">No forecast data available. Please search for a location.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Weather Map</h5>
+            </div>
+            <div class="card-body">
+                <div id="weatherMap" style="height: 400px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Weather Alert Modal -->
+<div class="modal fade" id="weatherAlertModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Weather Alerts</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="weatherAlertContainer">
+                <!-- Alert content will be populated here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Initialize map
+    let weatherMap = L.map('weatherMap').setView([41.3775, 64.5853], 6);
+    
+    // Add OpenStreetMap tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(weatherMap);
+    
+    // Weather layer group
+    let weatherLayer = L.layerGroup().addTo(weatherMap);
+    
+    // Weather alert modal
+    const weatherAlertModal = new bootstrap.Modal(document.getElementById('weatherAlertModal'));
+    
+    // Update weather display
+    function updateWeatherDisplay(weatherData) {
+        // Update current weather
+        document.querySelector('.card-body h2').textContent = weatherData.location;
+        document.querySelector('.card-body .text-muted').textContent = new Date(weatherData.timestamp).toLocaleString();
+        document.querySelector('.card-body .display-4').textContent = `${weatherData.temperature}°C`;
+        
+        const humidityEl = document.querySelector('.card-body p .bi-droplet-fill').parentNode;
+        humidityEl.innerHTML = `<i class="bi bi-droplet-fill text-primary"></i> Humidity: ${weatherData.humidity}%<br>`;
+        
+        const precipitationEl = document.querySelector('.card-body p .bi-cloud-rain-fill').parentNode;
+        precipitationEl.innerHTML = `<i class="bi bi-cloud-rain-fill text-primary"></i> Precipitation: ${weatherData.precipitation}mm<br>`;
+        
+        const windEl = document.querySelector('.card-body p .bi-wind').parentNode;
+        windEl.innerHTML = `<i class="bi bi-wind text-primary"></i> Wind: ${weatherData.wind_speed} km/h`;
+        
+        // Clear existing forecast
+        const forecastContainer = document.getElementById('forecastContainer');
+        forecastContainer.innerHTML = '';
+        
+        // Add forecast data
+        if (weatherData.forecast) {
+            const forecast = JSON.parse(weatherData.forecast);
+            
+            forecast.forEach(day => {
+                const date = new Date(day.date);
+                const formattedDate = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                
+                const dayCard = document.createElement('div');
+                dayCard.className = 'forecast-day text-center p-2';
+                dayCard.style.minWidth = '120px';
+                
+                dayCard.innerHTML = `
+                    <h6>${formattedDate}</h6>
+                    <div class="display-6">${day.temperature}°C</div>
+                    <p class="mb-0">
+                        <small><i class="bi bi-droplet"></i> ${day.humidity}%</small><br>
+                        <small><i class="bi bi-cloud-rain"></i> ${day.precipitation}mm</small><br>
+                        <small><i class="bi bi-wind"></i> ${day.wind} km/h</small>
+                    </p>
+                `;
+                
+                forecastContainer.appendChild(dayCard);
+            });
+            
+            // Check for weather alerts
+            if (forecast.some(day => day.precipitation > 20 || day.wind > 30)) {
+                document.getElementById('weatherAlertContainer').innerHTML = `
+                    <div class="alert alert-warning">
+                        <h6><i class="bi bi-exclamation-triangle-fill"></i> Weather Alert</h6>
+                        <p>Severe weather conditions detected in the forecast:</p>
+                        <ul>
+                            ${forecast.filter(day => day.precipitation > 20).map(day => 
+                                `<li>Heavy rain on ${new Date(day.date).toLocaleDateString()} (${day.precipitation}mm)</li>`
+                            ).join('')}
+                            ${forecast.filter(day => day.wind > 30).map(day => 
+                                `<li>Strong winds on ${new Date(day.date).toLocaleDateString()} (${day.wind} km/h)</li>`
+                            ).join('')}
+                        </ul>
+                        <p>Take appropriate precautions for your crops and fields.</p>
+                    </div>
+                `;
+                
+                weatherAlertModal.show();
+            }
+        } else {
+            forecastContainer.innerHTML = '<p class="text-center w-100">No forecast data available for this location.</p>';
+        }
+        
+        // Update weather map
+        updateWeatherMap(weatherData);
+    }
+    
+    // Update weather map
+    function updateWeatherMap(weatherData) {
+        // Clear existing weather markers
+        weatherLayer.clearLayers();
+        
+        // Add marker for current location
+        const marker = L.marker([weatherData.latitude || 41.3775, weatherData.longitude || 64.5853])
+            .bindPopup(`
+                <strong>${weatherData.location}</strong><br>
+                Temperature: ${weatherData.temperature}°C<br>
+                Humidity: ${weatherData.humidity}%<br>
+                Precipitation: ${weatherData.precipitation}mm<br>
+                Wind: ${weatherData.wind_speed} km/h
+            `)
+            .addTo(weatherLayer);
+        
+        // Center map on location
+        weatherMap.setView([weatherData.latitude || 41.3775, weatherData.longitude || 64.5853], 9);
+        
+        // Open popup
+        marker.openPopup();
+    }
+    
+    // Search weather by location
+    document.getElementById('searchWeatherBtn').addEventListener('click', function() {
+        const location = document.getElementById('locationSearch').value;
+        
+        if (!location) {
+            alert('Please enter a location');
+            return;
+        }
+        
+        fetch(`/api/weather?location=${encodeURIComponent(location)}`)
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error('Network response was not ok');
+            })
+            .then(data => {
+                if (data.length > 0) {
+                    updateWeatherDisplay(data[0]);
+                } else {
+                    alert('No weather data found for this location. Please try another location.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error fetching weather data. Please try again.');
+            });
+    });
+    
+    // Get weather for current location
+    document.getElementById('getCurrentLocationBtn').addEventListener('click', function() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
+                
+                fetch(`/api/weather?lat=${latitude}&lon=${longitude}`)
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        }
+                        throw new Error('Network response was not ok');
+                    })
+                    .then(data => {
+                        if (data.length > 0) {
+                            updateWeatherDisplay(data[0]);
+                        } else {
+                            alert('No weather data found for your location. Please try another method.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error fetching weather data. Please try again.');
+                    });
+            }, function(error) {
+                console.error('Error getting location:', error);
+                alert('Unable to get your location. Please check permissions or enter location manually.');
+            });
+        } else {
+            alert('Geolocation is not supported by your browser.');
+        }
+    });
+    
+    // Initialize weather map with any existing data
+    {% if weather %}
+    updateWeatherMap({
+        location: '{{ weather.location }}',
+        latitude: {{ weather.latitude|default(41.3775) }},
+        longitude: {{ weather.longitude|default(64.5853) }},
+        temperature: {{ weather.temperature }},
+        humidity: {{ weather.humidity }},
+        precipitation: {{ weather.precipitation }},
+        wind_speed: {{ weather.wind_speed }}
+    });
+    
+    // Initialize forecast if available
+    {% if weather.forecast %}
+    (function() {
+        const forecastContainer = document.getElementById('forecastContainer');
+        forecastContainer.innerHTML = '';
+        
+        const forecast = JSON.parse('{{ weather.forecast|safe }}');
+        
+        forecast.forEach(day => {
+            const date = new Date(day.date);
+            const formattedDate = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+            
+            const dayCard = document.createElement('div');
+            dayCard.className = 'forecast-day text-center p-2';
+            dayCard.style.minWidth = '120px';
+            
+            dayCard.innerHTML = `
+                <h6>${formattedDate}</h6>
+                <div class="display-6">${day.temperature}°C</div>
+                <p class="mb-0">
+                    <small><i class="bi bi-droplet"></i> ${day.humidity}%</small><br>
+                    <small><i class="bi bi-cloud-rain"></i> ${day.precipitation}mm</small><br>
+                    <small><i class="bi bi-wind"></i> ${day.wind} km/h</small>
+                </p>
+            `;
+            
+            forecastContainer.appendChild(dayCard);
+        });
+    })();
+    {% endif %}
+    {% endif %}
+</script>
+{% endblock %}
