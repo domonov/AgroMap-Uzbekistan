@@ -284,13 +284,12 @@
             alert('Geolocation is not supported by your browser.');
         }
     });
-    
-    // Initialize weather map with any existing data
+      // Initialize weather map with any existing data
     {% if weather %}
     updateWeatherMap({
         location: '{{ weather.location }}',
-        latitude: {{ weather.latitude|default(41.3775) }},
-        longitude: {{ weather.longitude|default(64.5853) }},
+        latitude: 41.3775,  // Default Uzbekistan coordinates
+        longitude: 64.5853, // Default Uzbekistan coordinates
         temperature: {{ weather.temperature }},
         humidity: {{ weather.humidity }},
         precipitation: {{ weather.precipitation }},
@@ -303,28 +302,32 @@
         const forecastContainer = document.getElementById('forecastContainer');
         forecastContainer.innerHTML = '';
         
-        const forecast = JSON.parse('{{ weather.forecast|safe }}');
-        
-        forecast.forEach(day => {
-            const date = new Date(day.date);
-            const formattedDate = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        try {
+            const forecast = {{ weather.forecast|tojson }};
             
-            const dayCard = document.createElement('div');
-            dayCard.className = 'forecast-day text-center p-2';
-            dayCard.style.minWidth = '120px';
-            
-            dayCard.innerHTML = `
-                <h6>${formattedDate}</h6>
-                <div class="display-6">${day.temperature}°C</div>
-                <p class="mb-0">
-                    <small><i class="bi bi-droplet"></i> ${day.humidity}%</small><br>
-                    <small><i class="bi bi-cloud-rain"></i> ${day.precipitation}mm</small><br>
-                    <small><i class="bi bi-wind"></i> ${day.wind} km/h</small>
-                </p>
-            `;
-            
-            forecastContainer.appendChild(dayCard);
-        });
+            forecast.forEach(day => {
+                const date = new Date(day.date);
+                const formattedDate = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                
+                const dayCard = document.createElement('div');
+                dayCard.className = 'forecast-day text-center p-2';
+                dayCard.style.minWidth = '120px';
+                
+                dayCard.innerHTML = `
+                    <h6>${formattedDate}</h6>
+                    <div class="display-6">${day.temp_max}°C</div>
+                    <p class="mb-0">
+                        <small>Min: ${day.temp_min}°C</small><br>
+                        <small>${day.description}</small>
+                    </p>
+                `;
+                
+                forecastContainer.appendChild(dayCard);
+            });
+        } catch (e) {
+            console.error('Error parsing forecast data:', e);
+            forecastContainer.innerHTML = '<p class="text-center w-100">Error displaying forecast data.</p>';
+        }
     })();
     {% endif %}
     {% endif %}

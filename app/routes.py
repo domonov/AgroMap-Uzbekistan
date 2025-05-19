@@ -18,9 +18,8 @@ def dashboard():
 @app.route('/map')
 def map():
     # Create a map centered on Uzbekistan
-    m = folium.Map(location=[41.3775, 64.5853], zoom_start=6)
-    folium_map = m._repr_html_()
-    return render_template('map.html', title='Interactive Map', map=folium_map)
+    # We'll handle the actual map rendering in JavaScript now
+    return render_template('map.html', title='Interactive Map')
 
 @app.route('/crops')
 @login_required
@@ -36,7 +35,24 @@ def fields():
 
 @app.route('/weather')
 def weather():
-    current_weather = WeatherData.query.order_by(WeatherData.timestamp.desc()).first()
+    location = request.args.get('location')
+    
+    if location:
+        # Get weather for the specified location
+        current_weather = WeatherData.query.filter_by(location=location).order_by(WeatherData.timestamp.desc()).first()
+    else:
+        # Get the most recent weather data
+        current_weather = WeatherData.query.order_by(WeatherData.timestamp.desc()).first()
+    
+    # Process forecast data if present
+    if current_weather and current_weather.forecast:
+        try:
+            # Parse forecast as JSON and pass it to the template
+            parsed_forecast = json.loads(current_weather.forecast)
+            current_weather.forecast = parsed_forecast
+        except json.JSONDecodeError:
+            current_weather.forecast = None
+    
     return render_template('weather.html', title='Weather Information', weather=current_weather)
 
 @app.route('/reports')
@@ -84,9 +100,21 @@ def register():
         email = request.form.get('email')
         username = request.form.get('username')
         password = request.form.get('password')
+        password2 = request.form.get('password2')
         
+        # Check if passwords match
+        if password != password2:
+            flash('Passwords do not match')
+            return redirect(url_for('register'))
+        
+        # Check if email already exists
         if User.query.filter_by(email=email).first():
             flash('Email already registered')
+            return redirect(url_for('register'))
+        
+        # Check if username already exists
+        if User.query.filter_by(username=username).first():
+            flash('Username already taken')
             return redirect(url_for('register'))
             
         user = User(email=email, username=username)
