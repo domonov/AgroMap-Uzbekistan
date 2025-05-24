@@ -11,16 +11,20 @@
 }
 
 /* General Styling */
-body {
+html, body { /* Added html to selector */
+  height: 100%; /* Added to make body take full height */
+  margin: 0; /* Added to remove default margin */
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: var(--light-gray);
-  min-height: 100vh;
+  /* min-height: 100vh; Removed as height: 100% is used */
   display: flex;
   flex-direction: column;
 }
 
-.container {
+.container { /* Assuming .container is the main content wrapper from base.html */
   flex: 1;
+  display: flex; /* Added for flex children */
+  flex-direction: column; /* Added for flex children */
 }
 
 /* Header and Navigation */
@@ -86,6 +90,15 @@ body {
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  flex-grow: 1; /* Added to make map container fill available space */
+  /* height: 600px; Removed, will be controlled by flex or specific class */
+}
+
+/* Added a class for a more full-screen map experience */
+.map-page-container {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Allows this container to grow */
 }
 
 /* Floating action buttons on map */
@@ -172,7 +185,8 @@ body {
   }
   
   #map-container, #weatherMap {
-    height: 400px !important;
+    /* height: 400px !important; Consider removing or adjusting if using flex-grow */
+    min-height: 400px; /* Ensures a minimum height on small screens */
   }
   
   .forecast-day {

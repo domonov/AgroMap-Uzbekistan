@@ -3,63 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }} - AgroMap Uzbekistan</title>
+    <title>{{ title }} - {{ _('AgroMap Uzbekistan') }}</title> {# Marked #}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"/>
+    <!-- Leaflet.fullscreen CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/1.0.2/Control.FullScreen.min.css" rel="stylesheet" />
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     <meta name="theme-color" content="#4CAF50">
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-success">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index') }}">AgroMap Uzbekistan</a>
+            <a class="navbar-brand" href="{{ url_for('index') }}">{{ _('AgroMap Uzbekistan') }}</a> {# Marked #}
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('index') }}">Home</a>
+                        <a class="nav-link" href="{{ url_for('index') }}">{{ _('Home') }}</a> {# Marked #}
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('map') }}">Map</a>
+                        <a class="nav-link" href="{{ url_for('map') }}">{{ _('Map') }}</a> {# Marked #}
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('weather') }}">Weather</a>
+                        <a class="nav-link" href="{{ url_for('weather') }}">{{ _('Weather') }}</a> {# Marked #}
                     </li>
                     {% if current_user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+                        <a class="nav-link" href="{{ url_for('dashboard') }}">{{ _('Dashboard') }}</a> {# Marked #}
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('crops') }}">Crops</a>
+                        <a class="nav-link" href="{{ url_for('crops') }}">{{ _('Crops') }}</a> {# Marked #}
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('fields') }}">Fields</a>
+                        <a class="nav-link" href="{{ url_for('fields') }}">{{ _('Fields') }}</a> {# Marked #}
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('reports') }}">Reports</a>
+                        <a class="nav-link" href="{{ url_for('reports') }}">{{ _('Reports') }}</a> {# Marked #}
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('analytics') }}">Analytics</a>
+                        <a class="nav-link" href="{{ url_for('analytics') }}">{{ _('Analytics') }}</a> {# Marked #}
                     </li>
                     {% endif %}
                 </ul>
-                <ul class="navbar-nav">
+                <ul class="navbar-nav ms-auto"> {# Changed me-auto to ms-auto for right alignment #}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            {{ _('Language') }} {# Marked #}
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="languageDropdown">
+                            {% for lang_code in config.LANGUAGES %}
+                            <li><a class="dropdown-item" href="{{ url_for(request.endpoint, lang=lang_code, **request.view_args) }}">{{ lang_code|upper }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </li>
                     {% if current_user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('profile') }}">Profile</a>
+                        <a class="nav-link" href="{{ url_for('profile') }}">{{ _('Profile') }}</a> {# Marked #}
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                        <a class="nav-link" href="{{ url_for('logout') }}">{{ _('Logout') }}</a> {# Marked #}
                     </li>
                     {% else %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+                        <a class="nav-link" href="{{ url_for('login') }}">{{ _('Login') }}</a> {# Marked #}
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('register') }}">Register</a>
+                        <a class="nav-link" href="{{ url_for('register') }}">{{ _('Register') }}</a> {# Marked #}
                     </li>
                     {% endif %}
                 </ul>
@@ -68,13 +80,13 @@
     </nav>
 
     <div class="container mt-4">
-        {% with messages = get_flashed_messages() %}
+        {% with messages = get_flashed_messages(with_categories=true) %} {# Added with_categories=true for potential styling #}
         {% if messages %}
-        <div class="alert alert-info">
-            {% for message in messages %}
-            <p>{{ message }}</p>
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category if category else 'info' }}" role="alert">
+                {{ message }} {# Flashed messages are already processed by _() in routes.py #}
+            </div>
             {% endfor %}
-        </div>
         {% endif %}
         {% endwith %}
 
@@ -83,12 +95,14 @@
 
     <footer class="footer mt-5 py-3 bg-light">
         <div class="container text-center">
-            <span class="text-muted">&copy; 2025 AgroMap Uzbekistan. All rights reserved.</span>
+            <span class="text-muted">&copy; {{ now_utc|datetimeformat('%Y') }} {{ _('AgroMap Uzbekistan. All rights reserved.') }}</span> {# Marked and updated year #}
         </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    <!-- Leaflet.fullscreen JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/1.0.2/Control.FullScreen.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block scripts %}{% endblock %}

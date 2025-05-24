@@ -3,34 +3,33 @@ from flask_login import login_user, logout_user, current_user, login_required
 from app import app, db
 from app.models import User, Crop, Field, WeatherData, Report
 from datetime import datetime
-import json # Added import json
+import json
+from flask_babel import gettext as _ # Added import
 
 @app.route('/')
 def index():
-    return render_template('index.html', title='AgroMap Uzbekistan')
+    return render_template('index.html', title=_('AgroMap Uzbekistan')) # Marked
 
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    return render_template('dashboard.html', title='Dashboard')
+    return render_template('dashboard.html', title=_('Dashboard')) # Marked
 
 @app.route('/map')
 def map():
-    # Create a map centered on Uzbekistan
-    # We'll handle the actual map rendering in JavaScript now
-    return render_template('map.html', title='Interactive Map')
+    return render_template('map.html', title=_('Interactive Map')) # Marked
 
 @app.route('/crops')
 @login_required
 def crops():
     all_crops = Crop.query.all()
-    return render_template('crops.html', title='Crop Management', crops=all_crops)
+    return render_template('crops.html', title=_('Crop Management'), crops=all_crops) # Marked
 
 @app.route('/fields')
 @login_required
 def fields():
     user_fields = Field.query.filter_by(user_id=current_user.id).all()
-    return render_template('fields.html', title='Field Management', fields=user_fields)
+    return render_template('fields.html', title=_('Field Management'), fields=user_fields) # Marked
 
 @app.route('/weather')
 def weather():
@@ -46,38 +45,58 @@ def weather():
     if current_weather and current_weather.forecast:
         current_weather.forecast_data = json.loads(current_weather.forecast) # Added logic
     
-    return render_template('weather.html', title='Weather Information', weather=current_weather)
+    return render_template('weather.html', title=_('Weather Information'), weather=current_weather) # Marked
 
 @app.route('/reports')
 @login_required
 def reports():
     user_reports = Report.query.filter_by(user_id=current_user.id).all()
-    return render_template('reports.html', title='Reports', reports=user_reports)
+    return render_template('reports.html', title=_('Reports'), reports=user_reports) # Marked
 
 @app.route('/analytics')
 @login_required
 def analytics():
-    return render_template('analytics.html', title='Analytics')
+    return render_template('analytics.html', title=_('Analytics')) # Marked
 
 @app.route('/profile')
 @login_required
 def profile():
-    return render_template('profile.html', title='User Profile')
+    return render_template('profile.html', title=_('User Profile')) # Marked
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('index')) # Added logic
+        return redirect(url_for('index'))
     if request.method == 'POST':
-        username = request.form.get('username') # Added logic
-        password = request.form.get('password') # Added logic
-        user = User.query.filter_by(username=username).first() # Added logic
-        if user is None or not user.check_password(password): # Added logic
-            flash('Invalid username or password') # Added logic
-            return redirect(url_for('login')) # Added logic
-        login_user(user, remember=request.form.get('remember_me')) # Added logic
-        return redirect(url_for('dashboard')) # Added logic
-    return render_template('login.html', title='Login')
+        email_or_username = request.form.get('email') # Changed from 'username' to 'email' to match form
+        password = request.form.get('password')
+        print(f"[LOGIN DEBUG] Attempting login for email/username: '{email_or_username}' with password: '{password}'")
+        
+        # Try to find user by email first, then by username if you want to support both
+        user = User.query.filter_by(email=email_or_username).first()
+        if not user: # If not found by email, try by username
+            user = User.query.filter_by(username=email_or_username).first()
+            if user:
+                print(f"[LOGIN DEBUG] User '{email_or_username}' found by username in database. ID: {user.id}, Email: {user.email}, Role: {user.role}")
+
+        if user:
+            if user.email == email_or_username: # Log if found by email
+                 print(f"[LOGIN DEBUG] User with email '{email_or_username}' found in database. ID: {user.id}, Username: {user.username}, Role: {user.role}")
+            password_check_result = user.check_password(password)
+            print(f"[LOGIN DEBUG] Password check for user '{user.username}': {password_check_result}")
+            if not password_check_result:
+                flash(_('Invalid email/username or password')) # Updated message
+                print("[LOGIN DEBUG] Password check failed.")
+                return redirect(url_for('login'))
+        else:
+            flash(_('Invalid email/username or password')) # Updated message
+            print(f"[LOGIN DEBUG] User with email/username '{email_or_username}' not found in database.")
+            return redirect(url_for('login'))
+        
+        login_user(user, remember=request.form.get('remember_me'))
+        print(f"[LOGIN DEBUG] Login successful for user '{user.username}'. Redirecting to dashboard.")
+        return redirect(url_for('dashboard'))
+    return render_template('login.html', title=_('Login')) # Marked
 
 @app.route('/logout')
 def logout():
@@ -87,19 +106,19 @@ def logout():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
-        return redirect(url_for('index')) # Added logic
+        return redirect(url_for('index'))
     if request.method == 'POST':
-        username = request.form.get('username') # Added logic
-        email = request.form.get('email') # Added logic
-        password = request.form.get('password') # Added logic
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
         # Add validation for username, email, password here (e.g., check if user already exists)
-        user = User(username=username, email=email) # Added logic
-        user.set_password(password) # Added logic
-        db.session.add(user) # Added logic
-        db.session.commit() # Added logic
-        flash('Congratulations, you are now a registered user!') # Added logic
-        return redirect(url_for('login')) # Added logic
-    return render_template('register.html', title='Register') # Added return for GET request
+        user = User(username=username, email=email)
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
+        flash(_('Congratulations, you are now a registered user!')) # Marked
+        return redirect(url_for('login'))
+    return render_template('register.html', title=_('Register')) # Marked
 
 
 @app.route('/api/fields', methods=['GET', 'POST'])

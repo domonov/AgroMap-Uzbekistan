@@ -1,49 +1,45 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <h1 class="mb-4">Interactive Map</h1>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-12">
-        <div id="map-container" style="height: 600px;"></div>
+<div class="row map-page-container" style="height: 100%;"> {# Ensure this container takes full height #}
+    <div class="col-md-12 d-flex flex-column" style="height: 100%;"> {# Ensure this container takes full height #}
+        {# <h1 class="mb-4">{{ _('Interactive Map') }}</h1> #} {# Marked and optionally hidden #}
+        <div id="map-container" style="flex-grow: 1; height: 100%;"> {# Ensure map container takes full height #}
+        </div>
     </div>
 </div>
 
 <!-- Floating Action Buttons -->
-<button id="report-btn" title="Report Issue">📝</button>
-<button id="locate-btn" title="My Location">📍</button>
+<button id="report-btn" title="{{ _('Report Issue') }}">📝</button> {# Marked #}
+<button id="locate-btn" title="{{ _('My Location') }}">📍</button> {# Marked #}
 
 <!-- Report Modal -->
 <div class="modal fade" id="reportModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Create Report</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title">{{ _('Create Report') }}</h5> {# Marked #}
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ _('Close') }}"></button> {# Marked #}
             </div>
             <div class="modal-body">
                 <form id="reportForm">
                     <div class="mb-3">
-                        <label for="reportTitle" class="form-label">Title</label>
+                        <label for="reportTitle" class="form-label">{{ _('Title') }}</label> {# Marked #}
                         <input type="text" class="form-control" id="reportTitle" required>
                     </div>
                     <div class="mb-3">
-                        <label for="reportContent" class="form-label">Description</label>
+                        <label for="reportContent" class="form-label">{{ _('Description') }}</label> {# Marked #}
                         <textarea class="form-control" id="reportContent" rows="3" required></textarea>
                     </div>
                     <div class="mb-3">
-                        <label for="reportLocation" class="form-label">Location</label>
+                        <label for="reportLocation" class="form-label">{{ _('Location') }}</label> {# Marked #}
                         <input type="text" class="form-control" id="reportLocation" readonly>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="submitReport">Submit Report</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Cancel') }}</button> {# Marked #}
+                <button type="button" class="btn btn-primary" id="submitReport">{{ _('Submit Report') }}</button> {# Marked #}
             </div>
         </div>
     </div>
@@ -53,7 +49,13 @@
 {% block scripts %}
 <script>
     // Initialize map
-    let map = L.map('map-container').setView([41.3775, 64.5853], 6);
+    let map = L.map('map-container', {
+        fullscreenControl: true, // Enable fullscreen control
+        // OR to position it in a different corner
+        // fullscreenControl: {
+        //     pseudoFullscreen: false // if true, fullscreen to page width and height
+        // }
+    }).setView([41.3775, 64.5853], 6);
     
     // Add tile layer
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -77,7 +79,7 @@
             reportLocationInput.value = `${userLocation.lat.toFixed(5)}, ${userLocation.lng.toFixed(5)}`;
             reportModal.show();
         } else {
-            alert('Please use the location button to get your position first.');
+            alert(_('Please use the location button to get your position first.')); // Marked
         }
     });
     
@@ -95,15 +97,15 @@
                 }
                 
                 currentMarker = L.marker([userLocation.lat, userLocation.lng]).addTo(map);
-                currentMarker.bindPopup("Your location").openPopup();
+                currentMarker.bindPopup(_("Your location")).openPopup(); // Marked
                 
                 map.setView([userLocation.lat, userLocation.lng], 13);
             }, function(error) {
                 console.error('Error getting location:', error);
-                alert('Unable to get your location. Please check permissions.');
+                alert(_('Unable to get your location. Please check permissions.')); // Marked
             });
         } else {
-            alert('Geolocation is not supported by your browser.');
+            alert(_('Geolocation is not supported by your browser.')); // Marked
         }
     });
     
@@ -113,7 +115,7 @@
         const content = document.getElementById('reportContent').value;
         
         if (!title || !content) {
-            alert('Please fill all required fields');
+            alert(_('Please fill all required fields')); // Marked
             return;
         }
         
@@ -135,14 +137,14 @@
             throw new Error('Network response was not ok');
         })
         .then(data => {
-            alert('Report submitted successfully');
+            alert(_('Report submitted successfully')); // Marked
             reportModal.hide();
             document.getElementById('reportTitle').value = '';
             document.getElementById('reportContent').value = '';
         })
         .catch(error => {
             console.error('Error submitting report:', error);
-            alert('Error submitting report. Please try again.');
+            alert(_('Error submitting report. Please try again.')); // Marked
         });
     });
     
@@ -172,7 +174,7 @@
     
     // Check if offline
     if (!navigator.onLine) {
-        alert('You are currently offline. Map functionality may be limited.');
+        alert(_('You are currently offline. Map functionality may be limited.')); // Marked
     }
 </script>
 {% endblock %}

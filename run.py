@@ -7,4 +7,5 @@ def make_shell_context():
             'WeatherData': WeatherData, 'Report': Report}
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000)
+
