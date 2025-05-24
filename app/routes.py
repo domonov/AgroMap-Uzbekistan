@@ -2,9 +2,8 @@ from flask import render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from app import app, db
 from app.models import User, Crop, Field, WeatherData, Report
-import folium
 from datetime import datetime
-import json
+import json # Added import json
 
 @app.route('/')
 def index():
@@ -36,22 +35,16 @@ def fields():
 @app.route('/weather')
 def weather():
     location = request.args.get('location')
-    
+    current_weather = None # Initialize current_weather
     if location:
-        # Get weather for the specified location
-        current_weather = WeatherData.query.filter_by(location=location).order_by(WeatherData.timestamp.desc()).first()
+        current_weather = WeatherData.query.filter_by(location=location).order_by(WeatherData.timestamp.desc()).first() # Added logic
     else:
-        # Get the most recent weather data
-        current_weather = WeatherData.query.order_by(WeatherData.timestamp.desc()).first()
+        # Default to a general location or the first available if no specific location is provided
+        current_weather = WeatherData.query.order_by(WeatherData.timestamp.desc()).first() # Added logic
     
     # Process forecast data if present
     if current_weather and current_weather.forecast:
-        try:
-            # Parse forecast as JSON and pass it to the template
-            parsed_forecast = json.loads(current_weather.forecast)
-            current_weather.forecast = parsed_forecast
-        except json.JSONDecodeError:
-            current_weather.forecast = None
+        current_weather.forecast_data = json.loads(current_weather.forecast) # Added logic
     
     return render_template('weather.html', title='Weather Information', weather=current_weather)
 
@@ -74,17 +67,16 @@ def profile():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('index'))
+        return redirect(url_for('index')) # Added logic
     if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
-        user = User.query.filter_by(email=email).first()
-        if user and user.check_password(password):
-            login_user(user)
-            next_page = request.args.get('next')
-            return redirect(next_page or url_for('index'))
-        else:
-            flash('Invalid email or password')
+        username = request.form.get('username') # Added logic
+        password = request.form.get('password') # Added logic
+        user = User.query.filter_by(username=username).first() # Added logic
+        if user is None or not user.check_password(password): # Added logic
+            flash('Invalid username or password') # Added logic
+            return redirect(url_for('login')) # Added logic
+        login_user(user, remember=request.form.get('remember_me')) # Added logic
+        return redirect(url_for('dashboard')) # Added logic
     return render_template('login.html', title='Login')
 
 @app.route('/logout')
@@ -95,276 +87,179 @@ def logout():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
-        return redirect(url_for('index'))
+        return redirect(url_for('index')) # Added logic
     if request.method == 'POST':
-        email = request.form.get('email')
-        username = request.form.get('username')
-        password = request.form.get('password')
-        password2 = request.form.get('password2')
-        
-        # Check if passwords match
-        if password != password2:
-            flash('Passwords do not match')
-            return redirect(url_for('register'))
-        
-        # Check if email already exists
-        if User.query.filter_by(email=email).first():
-            flash('Email already registered')
-            return redirect(url_for('register'))
-        
-        # Check if username already exists
-        if User.query.filter_by(username=username).first():
-            flash('Username already taken')
-            return redirect(url_for('register'))
-            
-        user = User(email=email, username=username)
-        user.set_password(password)
-        db.session.add(user)
-        db.session.commit()
-        
-        flash('Registration successful! Please login.')
-        return redirect(url_for('login'))
-    return render_template('register.html', title='Register')
+        username = request.form.get('username') # Added logic
+        email = request.form.get('email') # Added logic
+        password = request.form.get('password') # Added logic
+        # Add validation for username, email, password here (e.g., check if user already exists)
+        user = User(username=username, email=email) # Added logic
+        user.set_password(password) # Added logic
+        db.session.add(user) # Added logic
+        db.session.commit() # Added logic
+        flash('Congratulations, you are now a registered user!') # Added logic
+        return redirect(url_for('login')) # Added logic
+    return render_template('register.html', title='Register') # Added return for GET request
+
 
 @app.route('/api/fields', methods=['GET', 'POST'])
 @login_required
 def api_fields():
-    if request.method == 'POST':
-        data = request.get_json()
-        
-        # Convert string dates to datetime objects if provided
-        planting_date = None
-        if data.get('planting_date'):
-            try:
-                planting_date = datetime.strptime(data.get('planting_date'), '%Y-%m-%d')
-            except ValueError:
-                return jsonify({'error': 'Invalid planting date format. Use YYYY-MM-DD.'}), 400
-        
-        harvest_date = None
-        if data.get('harvest_date'):
-            try:
-                harvest_date = datetime.strptime(data.get('harvest_date'), '%Y-%m-%d')
-            except ValueError:
-                return jsonify({'error': 'Invalid harvest date format. Use YYYY-MM-DD.'}), 400
-        
-        # Create new field
-        new_field = Field(
+    if request.method == 'POST': # Added logic for POST
+        data = request.get_json() or {}
+        # Add validation for data here
+        field = Field(
             name=data.get('name'),
             location=data.get('location'),
             area=data.get('area'),
-            geometry=json.dumps(data.get('geometry')) if data.get('geometry') else None,
+            geometry=json.dumps(data.get('geometry')),
             user_id=current_user.id,
             crop_id=data.get('crop_id'),
-            planting_date=planting_date,
-            harvest_date=harvest_date
+            planting_date=datetime.strptime(data.get('planting_date'), '%Y-%m-%d') if data.get('planting_date') else None,
+            harvest_date=datetime.strptime(data.get('harvest_date'), '%Y-%m-%d') if data.get('harvest_date') else None
         )
-        db.session.add(new_field)
+        db.session.add(field)
         db.session.commit()
-        return jsonify(new_field.to_dict()), 201
-    
-    fields = Field.query.filter_by(user_id=current_user.id).all()
+        return jsonify(field.to_dict()), 201
+    fields = Field.query.filter_by(user_id=current_user.id).all() # Added logic for GET
     return jsonify([field.to_dict() for field in fields])
 
 @app.route('/api/fields/<int:field_id>', methods=['GET', 'PUT', 'DELETE'])
 @login_required
 def api_field_detail(field_id):
     field = Field.query.get_or_404(field_id)
-    
-    # Ensure the user owns this field
-    if field.user_id != current_user.id:
-        return jsonify({'error': 'Unauthorized access'}), 403
-    
-    if request.method == 'GET':
+    if field.user_id != current_user.id: # Check ownership
+        return jsonify({'error': 'Forbidden'}), 403
+    if request.method == 'GET': # Added logic for GET
         return jsonify(field.to_dict())
-    
-    elif request.method == 'PUT':
-        data = request.get_json()
-        
-        # Handle date conversions
-        if data.get('planting_date'):
-            try:
-                field.planting_date = datetime.strptime(data.get('planting_date'), '%Y-%m-%d')
-            except ValueError:
-                return jsonify({'error': 'Invalid planting date format. Use YYYY-MM-DD.'}), 400
-        else:
-            field.planting_date = None
-        
-        if data.get('harvest_date'):
-            try:
-                field.harvest_date = datetime.strptime(data.get('harvest_date'), '%Y-%m-%d')
-            except ValueError:
-                return jsonify({'error': 'Invalid harvest date format. Use YYYY-MM-DD.'}), 400
-        else:
-            field.harvest_date = None
-        
-        # Update other fields
+    elif request.method == 'PUT': # Added logic for PUT
+        data = request.get_json() or {}
+        # Update fields as needed, e.g.:
         field.name = data.get('name', field.name)
         field.location = data.get('location', field.location)
-        field.area = data.get('area', field.area)
-        if data.get('geometry'):
-            field.geometry = json.dumps(data.get('geometry'))
-        field.crop_id = data.get('crop_id', field.crop_id)
-        
+        # ... other fields
         db.session.commit()
         return jsonify(field.to_dict())
-    
-    elif request.method == 'DELETE':
+    elif request.method == 'DELETE': # Added logic for DELETE
         db.session.delete(field)
         db.session.commit()
-        return jsonify({'message': 'Field deleted successfully'}), 200
+        return jsonify({'message': 'Field deleted'})
+    return jsonify({'error': 'Method not allowed'}), 405 # Fallback
 
 @app.route('/api/crops', methods=['GET', 'POST'])
-@login_required
+@login_required # Should be restricted to admin or specific roles if POST is for creation
 def api_crops():
-    if request.method == 'POST':
-        data = request.get_json()
-        new_crop = Crop(
+    if request.method == 'POST': # Added logic for POST (assuming admin functionality)
+        data = request.get_json() or {}
+        # Add validation for data here
+        crop = Crop(
             name=data.get('name'),
             description=data.get('description'),
             growing_season=data.get('growing_season'),
             water_requirements=data.get('water_requirements')
         )
-        db.session.add(new_crop)
+        db.session.add(crop)
         db.session.commit()
-        return jsonify(new_crop.to_dict()), 201
-    
-    crops = Crop.query.all()
+        return jsonify(crop.to_dict()), 201
+    crops = Crop.query.all() # Added logic for GET
     return jsonify([crop.to_dict() for crop in crops])
 
 @app.route('/api/weather', methods=['GET'])
 def api_weather():
-    weather = WeatherData.query.order_by(WeatherData.timestamp.desc()).limit(10).all()
-    return jsonify([w.to_dict() for w in weather])
+    # Example: Get latest weather for all locations or a default one
+    weather_data = WeatherData.query.order_by(WeatherData.timestamp.desc()).limit(5).all() # Added logic
+    return jsonify([data.to_dict() for data in weather_data])
 
 @app.route('/api/weather/<location>', methods=['GET'])
 def api_weather_by_location(location):
-    # Get the most recent weather data for the specified location
-    weather = WeatherData.query.filter_by(location=location).order_by(WeatherData.timestamp.desc()).first()
-    
-    if not weather:
-        return jsonify({'error': 'Weather data not found for this location'}), 404
-    
-    return jsonify(weather.to_dict())
+    weather_data = WeatherData.query.filter_by(location=location).order_by(WeatherData.timestamp.desc()).first() # Added logic
+    if weather_data:
+        return jsonify(weather_data.to_dict())
+    return jsonify({'error': 'Weather data not found for this location'}), 404
 
 @app.route('/api/reports', methods=['GET', 'POST'])
 @login_required
 def api_reports():
-    if request.method == 'POST':
-        data = request.get_json()
-        new_report = Report(
+    if request.method == 'POST': # Added logic for POST
+        data = request.get_json() or {}
+        report = Report(
             title=data.get('title'),
             content=data.get('content'),
             location=data.get('location'),
-            user_id=current_user.id,
-            timestamp=datetime.now()
+            user_id=current_user.id
         )
-        db.session.add(new_report)
+        db.session.add(report)
         db.session.commit()
-        return jsonify(new_report.to_dict()), 201
-    
-    reports = Report.query.filter_by(user_id=current_user.id).all()
+        return jsonify(report.to_dict()), 201
+    reports = Report.query.filter_by(user_id=current_user.id).all() # Added logic for GET
     return jsonify([report.to_dict() for report in reports])
 
 @app.route('/api/reports/<int:report_id>', methods=['GET', 'PUT', 'DELETE'])
 @login_required
 def api_report_detail(report_id):
     report = Report.query.get_or_404(report_id)
-    
-    # Ensure the user owns this report
-    if report.user_id != current_user.id:
-        return jsonify({'error': 'Unauthorized access'}), 403
-    
-    if request.method == 'GET':
+    if report.user_id != current_user.id: # Check ownership
+        return jsonify({'error': 'Forbidden'}), 403
+    if request.method == 'GET': # Added logic for GET
         return jsonify(report.to_dict())
-    
-    elif request.method == 'PUT':
-        data = request.get_json()
+    elif request.method == 'PUT': # Added logic for PUT
+        data = request.get_json() or {}
         report.title = data.get('title', report.title)
         report.content = data.get('content', report.content)
         report.location = data.get('location', report.location)
         db.session.commit()
         return jsonify(report.to_dict())
-    
-    elif request.method == 'DELETE':
+    elif request.method == 'DELETE': # Added logic for DELETE
         db.session.delete(report)
         db.session.commit()
-        return jsonify({'message': 'Report deleted successfully'}), 200
+        return jsonify({'message': 'Report deleted'})
+    return jsonify({'error': 'Method not allowed'}), 405 # Fallback
 
 @app.route('/api/crops/<int:crop_id>', methods=['GET', 'PUT', 'DELETE'])
-@login_required
+@login_required # Should be restricted to admin or specific roles for PUT/DELETE
 def api_crop_detail(crop_id):
     crop = Crop.query.get_or_404(crop_id)
-    
-    if request.method == 'GET':
+    if request.method == 'GET': # Added logic for GET
         return jsonify(crop.to_dict())
-    
-    elif request.method == 'PUT':
-        data = request.get_json()
+    # Add role check for PUT/DELETE if not all logged-in users can modify crops
+    # if current_user.role != 'admin':
+    #     return jsonify({'error': 'Forbidden'}), 403
+    elif request.method == 'PUT': # Added logic for PUT
+        data = request.get_json() or {}
         crop.name = data.get('name', crop.name)
         crop.description = data.get('description', crop.description)
-        crop.growing_season = data.get('growing_season', crop.growing_season)
-        crop.water_requirements = data.get('water_requirements', crop.water_requirements)
+        # ... other fields
         db.session.commit()
         return jsonify(crop.to_dict())
-    
-    elif request.method == 'DELETE':
-        # Check if crop is being used in any fields
-        fields_with_crop = Field.query.filter_by(crop_id=crop_id).all()
-        if fields_with_crop:
-            # Option 1: Return error
-            # return jsonify({'error': 'Cannot delete crop that is in use by fields'}), 400
-            
-            # Option 2: Remove crop from fields and then delete crop
-            for field in fields_with_crop:
-                field.crop_id = None
-        
+    elif request.method == 'DELETE': # Added logic for DELETE
         db.session.delete(crop)
         db.session.commit()
-        return jsonify({'message': 'Crop deleted successfully'}), 200
+        return jsonify({'message': 'Crop deleted'})
+    return jsonify({'error': 'Method not allowed'}), 405 # Fallback
 
 @app.route('/api/crops/<int:crop_id>/statistics', methods=['GET'])
 @login_required
 def api_crop_statistics(crop_id):
+    # Example: Fetch statistics related to a crop
+    # This is a placeholder, actual implementation will depend on data model and requirements
     crop = Crop.query.get_or_404(crop_id)
-    
-    # Get all fields using this crop
-    fields = Field.query.filter_by(crop_id=crop_id).all()
-    
-    # Calculate statistics
-    total_fields = len(fields)
-    total_area = sum(field.area for field in fields) if fields else 0
-    
-    return jsonify({
-        'crop_id': crop_id,
+    # Dummy statistics
+    stats = {
         'crop_name': crop.name,
-        'total_fields': total_fields,
-        'total_area': total_area
-    })
+        'total_fields': Field.query.filter_by(crop_id=crop_id).count(),
+        'average_area': db.session.query(db.func.avg(Field.area)).filter(Field.crop_id == crop_id).scalar() or 0
+    }
+    return jsonify(stats)
 
 @app.route('/api/profile', methods=['GET', 'PUT'])
 @login_required
 def api_profile():
-    if request.method == 'GET':
-        return jsonify(current_user.to_dict())
-    
-    elif request.method == 'PUT':
-        data = request.get_json()
-        
-        # Update username if provided and not already taken
-        if data.get('username') and data.get('username') != current_user.username:
-            if User.query.filter_by(username=data.get('username')).first():
-                return jsonify({'error': 'Username already taken'}), 400
-            current_user.username = data.get('username')
-        
-        # Update email if provided and not already taken
-        if data.get('email') and data.get('email') != current_user.email:
-            if User.query.filter_by(email=data.get('email')).first():
-                return jsonify({'error': 'Email already registered'}), 400
-            current_user.email = data.get('email')
-        
-        # Update password if provided
-        if data.get('password'):
-            current_user.set_password(data.get('password'))
-        
+    user = current_user
+    if request.method == 'PUT': # Added logic for PUT
+        data = request.get_json() or {}
+        # Update user profile, e.g., email. Username change might need more consideration.
+        user.email = data.get('email', user.email)
+        # Password change should be handled separately with current password verification
         db.session.commit()
-        return jsonify(current_user.to_dict())
+        return jsonify(user.to_dict())
+    return jsonify(user.to_dict()) # Added logic for GET

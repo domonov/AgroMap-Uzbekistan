@@ -77,9 +77,8 @@ class Field(db.Model):
             'geometry': json.loads(self.geometry) if self.geometry else None,
             'user_id': self.user_id,
             'crop_id': self.crop_id,
-            'crop_name': self.crop.name if self.crop else None,
-            'planting_date': self.planting_date.strftime('%Y-%m-%d') if self.planting_date else None,
-            'harvest_date': self.harvest_date.strftime('%Y-%m-%d') if self.harvest_date else None
+            'planting_date': self.planting_date.isoformat() if self.planting_date else None,
+            'harvest_date': self.harvest_date.isoformat() if self.harvest_date else None
         }
 
 class WeatherData(db.Model):
@@ -93,13 +92,13 @@ class WeatherData(db.Model):
     forecast = db.Column(db.Text)  # JSON string for forecast data
     
     def __repr__(self):
-        return f'<Weather {self.location} at {self.timestamp}>'
+        return f'<WeatherData {self.location} {self.timestamp}>'
     
     def to_dict(self):
         return {
             'id': self.id,
             'location': self.location,
-            'timestamp': self.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+            'timestamp': self.timestamp.isoformat(),
             'temperature': self.temperature,
             'humidity': self.humidity,
             'precipitation': self.precipitation,
@@ -124,7 +123,6 @@ class Report(db.Model):
             'title': self.title,
             'content': self.content,
             'location': self.location,
-            'timestamp': self.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
-            'user_id': self.user_id,
-            'author': self.author.username
+            'timestamp': self.timestamp.isoformat(),
+            'user_id': self.user_id
         }
