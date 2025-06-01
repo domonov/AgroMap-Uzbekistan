@@ -1,0 +1,35 @@
+Based on your AgroMap Uzbekistan project, here's a professional resume description and highlights:
+
+Project Description
+AgroMap Uzbekistan (agroapp.uz) - A community-driven web application designed to help Uzbekistan's farmers make data-informed planting decisions and improve agricultural mapping. The platform visualizes crop distribution trends, provides market analysis, and enables crowdsourced map improvements for rural areas.
+
+Project Highlights
+• Developed full-stack web application using Flask (Python), SQLAlchemy, and Leaflet.js serving agricultural community needs
+
+• Implemented multi-language support (Uzbek, Russian, English) with internationalization framework for 30+ million potential users
+
+• Built interactive mapping system with real-time crop visualization, field boundary drawing, and geospatial data management
+
+• Created RESTful API endpoints for crop reporting, market analysis, and crowdsourced map improvement suggestions
+
+• Designed responsive mobile-first interface optimized for rural farmers using smartphones in field conditions
+
+• Integrated external APIs for weather data, IP-based geolocation, and market price predictions
+
+• Deployed production application with PostgreSQL database and custom domain (agroapp.uz)
+
+• Implemented data analytics features including crop distribution statistics, trend analysis, and market recommendations
+
+• Built collaborative mapping tools allowing users to suggest street names, building addresses, and business locations
+
+• Addresses real economic impact - agriculture represents 20% of Uzbekistan's GDP with potential to reduce crop waste by 20%
+
+Technical Skills Demonstrated
+
+Backend: Python, Flask, SQLAlchemy, RESTful APIs
+Frontend: JavaScript, HTML5, CSS3, Leaflet.js mapping library
+Database: PostgreSQL, SQLite, geospatial data handling
+Deployment: Production server management, domain configuration
+Integration: External API consumption, internationalization (i18n)
+UX/UI: Mobile-responsive design, agricultural user experience
+This project demonstrates your ability to build practical solutions for real-world problems while showcasing full-stack development skills and cultural awareness for international markets.

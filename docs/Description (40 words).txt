@@ -1,0 +1,15 @@
+Description (40 words)
+Developed NavbatLess, a comprehensive appointment booking platform for Uzbekistan businesses featuring Google Maps integration, Telegram bot authentication, real-time queue management, and responsive web design. Built with Flask, PostgreSQL, Docker deployment on Synology NAS infrastructure.
+
+Key Highlights
+Full-Stack Web Development: Built scalable Flask application with PostgreSQL database and responsive frontend
+API Integration: Implemented Google Maps API and Google Places API for location-based business discovery
+Authentication System: Developed Telegram bot integration for secure phone number verification
+Real-Time Features: Created live queue management and appointment tracking system
+DevOps & Deployment: Containerized application with Docker and deployed on Synology NAS with NGINX
+Database Design: Architected comprehensive schemas for businesses, appointments, and user management
+Mobile-First Design: Developed responsive UI optimized for both mobile and desktop experiences
+Business Intelligence: Built analytics dashboard for appointment tracking and business metrics
+Geolocation Services: Implemented location-based business search with radius filtering
+Scalable Architecture: Designed modular system supporting walk-in queues and scheduled appointments
+This project demonstrates strong full-stack development skills, API integration expertise, and practical deployment experience with modern web technologies.

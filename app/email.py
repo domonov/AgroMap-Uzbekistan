@@ -30,10 +30,10 @@ def send_email(subject, sender, recipients, text_body, html_body):
 
 def send_password_reset_email(user):
     """Send password reset email with token"""
-    token = user.reset_token
+    token = user.generate_reset_token()  # Generate token if not exists
     send_email(
         subject='[AgroMap] Reset Your Password',
-        sender=current_app.config['MAIL_DEFAULT_SENDER'],
+        sender=current_app.config.get('MAIL_DEFAULT_SENDER', 'noreply@agromap.uz'),
         recipients=[user.email],
         text_body=render_template('email/reset_password.txt', user=user, token=token),
         html_body=render_template('email/reset_password.html', user=user, token=token)

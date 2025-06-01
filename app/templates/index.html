@@ -38,6 +38,13 @@
             <input type="text" id="search-input" placeholder="{{ _('Search location...') }}">
             <button onclick="searchLocation()">{{ _('Search') }}</button>
         </div>
+          <div id="trends-control">
+            <button onclick="showTrendsModal()">{{ _('View Trends') }}</button>
+            <button onclick="showSuggestionsModal()">{{ _('Suggest Location') }}</button>
+            <button onclick="showMarketAnalysisModal()">{{ _('Market Analysis') }}</button>
+            <button onclick="showAnalyticsDashboard()">{{ _('Analytics Dashboard') }}</button>
+            <button onclick="showRotationPlanner()">{{ _('Crop Rotation Planner') }}</button>
+        </div>
     </div>
 
     <div id="report-form" class="form-container">
@@ -76,6 +83,77 @@
     </div>
 
     <div id="location-status"></div>
+
+    <!-- Trends Modal -->
+    <div id="trends-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeTrendsModal()">&times;</span>
+            <h2>{{ _('Crop Trends & Statistics') }}</h2>
+            <div id="trends-content">
+                <div id="crop-distribution"></div>
+                <div id="price-predictions"></div>
+                <div id="monthly-trends"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Map Suggestions Modal -->
+    <div id="suggestions-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeSuggestionsModal()">&times;</span>
+            <h2>{{ _('Suggest Map Improvement') }}</h2>
+            <form id="suggestion-form">
+                <select id="suggestion-type" required>
+                    <option value="">{{ _('Select type') }}</option>
+                    <option value="street">{{ _('Street Name') }}</option>
+                    <option value="building">{{ _('Building/Address') }}</option>
+                    <option value="business">{{ _('Business/POI') }}</option>
+                </select>
+                <input type="text" id="suggestion-name" placeholder="{{ _('Name/Description') }}" required>
+                <input type="text" id="suggestion-lat" readonly placeholder="{{ _('Latitude') }}">
+                <input type="text" id="suggestion-lng" readonly placeholder="{{ _('Longitude') }}">
+                <p class="help-text">{{ _('Click on the map to select location') }}</p>
+                <button type="submit">{{ _('Submit Suggestion') }}</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Market Analysis Modal -->
+    <div id="market-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeMarketAnalysisModal()">&times;</span>
+            <h2>{{ _('Market Analysis & Recommendations') }}</h2>
+            <div id="market-content">
+                <div class="market-tabs">
+                    <button class="tab-button active" onclick="showMarketTab('overview')">{{ _('Overview') }}</button>
+                    <button class="tab-button" onclick="showMarketTab('recommendations')">{{ _('Recommendations') }}</button>
+                    <button class="tab-button" onclick="showMarketTab('regional')">{{ _('Regional Analysis') }}</button>
+                </div>
+                
+                <div id="market-overview" class="tab-content active">
+                    <div id="crop-selector">
+                        <label>{{ _('Select Crop:') }}</label>
+                        <select id="analysis-crop-select" onchange="loadCropAnalysis()">
+                            <option value="wheat">{{ _('Wheat') }}</option>
+                            <option value="cotton">{{ _('Cotton') }}</option>
+                            <option value="potato">{{ _('Potato') }}</option>
+                            <option value="corn">{{ _('Corn') }}</option>
+                            <option value="rice">{{ _('Rice') }}</option>
+                        </select>
+                    </div>
+                    <div id="market-analysis-results"></div>
+                </div>
+                
+                <div id="market-recommendations" class="tab-content">
+                    <div id="planting-recommendations"></div>
+                </div>
+                
+                <div id="market-regional" class="tab-content">
+                    <div id="regional-analysis"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>

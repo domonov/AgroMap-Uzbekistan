@@ -1,7 +1,7 @@
 from flask import Flask, request, g
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from flask_babel import Babel
+from flask_babel import Babel, get_locale as babel_get_locale
 from flask_mail import Mail
 from flask_caching import Cache
 from flask_login import LoginManager
@@ -29,16 +29,14 @@ def create_app(config_name=None):
     # Import configuration
     from config import config
     config_name = config_name or os.environ.get('FLASK_ENV', 'development')
-    app.config.from_object(config[config_name])
-
-    # Initialize extensions with app
+    app.config.from_object(config[config_name])    # Initialize extensions with app
     db.init_app(app)
     migrate.init_app(app, db)
+    babel.init_app(app)
     mail.init_app(app)
     cache.init_app(app)
     login.init_app(app)
-    
-    # Configure Flask-Login
+      # Configure Flask-Login
     login.login_view = 'auth.login'
     login.login_message = 'Please log in to access this page.'
     login.login_message_category = 'info'
@@ -48,23 +46,28 @@ def create_app(config_name=None):
         from app.models import User
         return User.query.get(int(user_id))
     
-    # Define locale selector function for Babel
+    # Configure logging for production
+    if not app.debug and not app.testing:
+        configure_logging(app)
+    
+    # Configure security headers for production
+    if app.config.get('SECURITY_HEADERS'):
+        configure_security_headers(app)    # Babel locale selector
+    babel.init_app(app, locale_selector=get_locale)
+    
     def get_locale():
         # Check URL parameter first
         lang = request.args.get('lang')
-        if lang in app.config.get('LANGUAGES', ['en']):
+        if lang in app.config['LANGUAGES']:
             return lang
         
         # Check for language in cookies
         lang = request.cookies.get('language')
-        if lang in app.config.get('LANGUAGES', ['en']):
+        if lang in app.config['LANGUAGES']:
             return lang
             
         # Use browser preferred language
-        return request.accept_languages.best_match(app.config.get('LANGUAGES', ['en'])) or 'en'
-    
-    # Configure Babel with locale selector
-    babel.init_app(app, locale_selector=get_locale)
+        return request.accept_languages.best_match(app.config['LANGUAGES']) or 'en'
     
     # Handle language selection
     @app.before_request
@@ -78,16 +81,7 @@ def create_app(config_name=None):
         def translate(key):
             return get_translation(key, g.locale)
         return {'_': translate}
-    
-    # Configure logging for production
-    if not app.debug and not app.testing:
-        configure_logging(app)
-    
-    # Configure security headers for production
-    if app.config.get('SECURITY_HEADERS'):
-        configure_security_headers(app)
-    
-    # Register blueprints
+      # Register blueprints
     from .routes import bp as main_bp
     app.register_blueprint(main_bp)
     

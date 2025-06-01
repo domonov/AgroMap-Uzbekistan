@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="{{ g.locale or 'en' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ _('AgroMap Uzbekistan') }}{% endblock %}</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <a href="{{ url_for('main.index') }}">
+                <h1>🌱 {{ _('AgroMap Uzbekistan') }}</h1>
+            </a>
+        </div>
+        
+        <div class="nav-menu">
+            {% if current_user.is_authenticated %}
+                <span class="nav-user">{{ _('Welcome') }}, {{ current_user.username }}!</span>
+                <a href="{{ url_for('auth.logout') }}" class="nav-link">{{ _('Logout') }}</a>
+            {% else %}
+                <a href="{{ url_for('auth.login') }}" class="nav-link">{{ _('Login') }}</a>
+                <a href="{{ url_for('auth.register') }}" class="nav-link">{{ _('Register') }}</a>
+            {% endif %}
+        </div>
+        
+        <!-- Language Selector -->
+        <div class="language-selector">
+            <div class="language-options">
+                <button onclick="changeLanguage('en')" class="lang-btn {% if g.locale == 'en' %}active{% endif %}">
+                    <img src="{{ url_for('static', filename='images/flags/en.png') }}" alt="English"> EN
+                </button>
+                <button onclick="changeLanguage('uz')" class="lang-btn {% if g.locale == 'uz' %}active{% endif %}">
+                    <img src="{{ url_for('static', filename='images/flags/uz.png') }}" alt="O'zbek"> UZ
+                </button>
+                <button onclick="changeLanguage('ru')" class="lang-btn {% if g.locale == 'ru' %}active{% endif %}">
+                    <img src="{{ url_for('static', filename='images/flags/ru.png') }}" alt="Русский"> RU
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                        <button type="button" class="close" onclick="this.parentElement.style.display='none'">&times;</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2025 AgroMap Uzbekistan. {{ _('Community-driven agricultural mapping') }}.</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <script>
+        // Language switching function
+        function changeLanguage(lang) {
+            fetch(`/set-language/${lang}`)
+                .then(() => {
+                    document.cookie = `language=${lang};path=/;max-age=31536000`;
+                    window.location.reload();
+                });
+        }
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,23 @@
+40-Word Description
+AgroMap Uzbekistan (agroapp.uz) - Full-stack web application helping Uzbekistan farmers make data-driven planting decisions through interactive crop mapping, market analysis, weather integration, and crowdsourced agricultural data visualization serving 30+ million users.
+
+Highlights
+• Developed full-stack Flask application with PostgreSQL database and RESTful API architecture
+
+• Built interactive mapping system using Leaflet.js for real-time crop visualization and field management
+
+• Implemented multi-language support (Uzbek/Russian/English) with internationalization framework
+
+• Created responsive mobile-first interface optimized for rural farmers using smartphones
+
+• Integrated external APIs for weather data, geolocation, and market price predictions
+
+• Designed collaborative mapping tools for crowdsourced street names and business locations
+
+• Built data analytics dashboard with crop distribution statistics and trend analysis
+
+• Deployed production application with custom domain serving agricultural community needs
+
+• Addresses $2B+ agricultural market representing 20% of Uzbekistan's GDP
+
+• Demonstrates cultural awareness and practical problem-solving for emerging markets

@@ -1,8 +1,14 @@
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
-from app import db
 from datetime import datetime
 import uuid
+
+# Import db from __init__.py to avoid circular imports
+def get_db():
+    from app import db
+    return db
+
+db = get_db()
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -14,8 +20,7 @@ class User(UserMixin, db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
     reset_token = db.Column(db.String(100), unique=True)
-    
-    # Relationships
+      # Relationships
     crop_reports = db.relationship('CropReport', backref='author', lazy='dynamic')
     map_suggestions = db.relationship('MapSuggestion', backref='author', lazy='dynamic')
     
@@ -28,6 +33,11 @@ class User(UserMixin, db.Model):
     def generate_reset_token(self):
         self.reset_token = str(uuid.uuid4())
         return self.reset_token
+    
+    @staticmethod
+    def verify_reset_password_token(token):
+        """Verify reset token and return user if valid"""
+        return User.query.filter_by(reset_token=token).first()
         
     def __repr__(self):
         return f'<User {self.username}>'

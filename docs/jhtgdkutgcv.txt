@@ -1,0 +1,26 @@
+Description (40 words)
+Developed NavbatLess to address Uzbekistan's digital gap where businesses lack online presence and rely on phone/in-person booking. Created comprehensive platform providing businesses digital visibility, online appointment booking, and real-time queue management for increasingly connected population.
+
+Key Highlights
+Digital Transformation Solution: Addressed market gap where Uzbekistan businesses lack websites and online booking infrastructure
+Market Research & Problem Solving: Identified and solved real-world problem of outdated appointment systems in emerging digital market
+Full-Stack Web Development: Built scalable Flask application with PostgreSQL database and responsive frontend
+API Integration: Implemented Google Maps API and Google Places API for location-based business discovery
+Authentication System: Developed Telegram bot integration for secure phone number verification
+Real-Time Features: Created live queue management replacing traditional in-person queueing systems
+Business Digitization: Enabled businesses to establish online presence and connect with digital-first consumers
+DevOps & Deployment: Containerized application with Docker and deployed on Synology NAS with NGINX
+Database Design: Architected comprehensive schemas for businesses, appointments, and user management
+Mobile-First Design: Developed responsive UI optimized for smartphone-dominant user base
+Geolocation Services: Implemented location-based business search with radius filtering
+Scalable Architecture: Designed modular system supporting both walk-in queues and scheduled appointments
+This project demonstrates entrepreneurial thinking, market analysis skills, and ability to create technology solutions that bridge digital divides in emerging markets.
+
+
+
+Work Authorization: Authorized in the US for any employer
+Start Date: Available to start immediately
+Relocation: Open to relocation nationwide
+Study Abroad experiences
+Academic organizations or student leadership experiences
+Leadership activities
